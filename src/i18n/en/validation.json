@@ -1,0 +1,13 @@
+{
+  "NOT_EMPTY": "{property} is required",
+  "isNotEmpty": "This field is required",
+  "INVALID_EMAIL": "Must be a valid email",
+  "isEmail": "Must be a valid email",
+  "minLength": "Must be at least {min} characters",
+  "MIN_LENGTH": "Must be at least {constraints.0} characters",
+  "isString": "Must be a string",
+  "isNumber": "Must be a number",
+  "isUUID": "Must be a valid UUID",
+  "isStrongPassword": "Password must contain at least 1 number, 1 symbol, 1 uppercase and 1 lowercase letter",
+  "IS_STRONG_PASSWORD": "Password must contain at least 1 number, 1 symbol, 1 uppercase and 1 lowercase letter"
+}

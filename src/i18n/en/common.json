@@ -1,0 +1,21 @@
+{
+  "validation": {
+    "required": "This field is required",
+    "invalid": "Invalid value",
+    "isEmail": "Must be a valid email",
+    "minLength": "Must be at least {min} characters",
+    "isStrongPassword": "Password must contain at least 1 number, 1 symbol, 1 uppercase and 1 lowercase letter"
+  },
+  "errors": {
+    "notFound": "Resource not found",
+    "conflict": "Resource already exists",
+    "unauthorized": "Invalid credentials",
+    "forbidden": "Access denied",
+    "badRequest": "Bad request"
+  },
+  "auth": {
+    "invalidCredentials": "Invalid credentials",
+    "invalidOrExpiredToken": "Invalid or expired refresh token",
+    "logoutSuccess": "Logged out successfully"
+  }
+}

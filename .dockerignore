@@ -1,0 +1,54 @@
+# Dependencies (reinstalled in container)
+node_modules
+
+# Build output (built inside container)
+dist
+
+# Version control
+.git
+.gitignore
+
+# Tests and coverage (not needed in image)
+test
+coverage
+*.spec.ts
+*.e2e-spec.ts
+jest-e2e.json
+
+# Environment and secrets (inject at runtime)
+.env
+.env.*
+!.env.example
+
+# IDE and editor
+.idea
+.vscode
+.cursor
+*.sublime-workspace
+
+# Logs and temp
+*.log
+.temp
+.tmp
+.tmpdir
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local/dev only
+rabbitmq
+README.md
+REVIEW.txt
+scripts
+
+# Lint/format (not needed for build or run)
+eslint.config.mjs
+.prettierrc
+.editorconfig
+
+# Docker (avoid recursive copy)
+Dockerfile
+.dockerignore
+compose.yml
+compose.*.yml

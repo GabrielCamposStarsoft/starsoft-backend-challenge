@@ -1,0 +1,13 @@
+{
+  "NOT_EMPTY": "{property} é obrigatório",
+  "isNotEmpty": "Este campo é obrigatório",
+  "INVALID_EMAIL": "Deve ser um e-mail válido",
+  "isEmail": "Deve ser um e-mail válido",
+  "minLength": "Deve ter pelo menos {min} caracteres",
+  "MIN_LENGTH": "Deve ter pelo menos {constraints.0} caracteres",
+  "isString": "Deve ser um texto",
+  "isNumber": "Deve ser um número",
+  "isUUID": "Deve ser um UUID válido",
+  "isStrongPassword": "A senha deve conter pelo menos 1 número, 1 símbolo, 1 maiúscula e 1 minúscula",
+  "IS_STRONG_PASSWORD": "A senha deve conter pelo menos 1 número, 1 símbolo, 1 maiúscula e 1 minúscula"
+}

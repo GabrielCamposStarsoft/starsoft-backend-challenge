@@ -1,0 +1,21 @@
+{
+  "validation": {
+    "required": "Este campo é obrigatório",
+    "invalid": "Valor inválido",
+    "isEmail": "Deve ser um e-mail válido",
+    "minLength": "Deve ter pelo menos {min} caracteres",
+    "isStrongPassword": "A senha deve conter pelo menos 1 número, 1 símbolo, 1 maiúscula e 1 minúscula"
+  },
+  "errors": {
+    "notFound": "Recurso não encontrado",
+    "conflict": "Recurso já existe",
+    "unauthorized": "Credenciais inválidas",
+    "forbidden": "Acesso negado",
+    "badRequest": "Requisição inválida"
+  },
+  "auth": {
+    "invalidCredentials": "Credenciais inválidas",
+    "invalidOrExpiredToken": "Token de atualização inválido ou expirado",
+    "logoutSuccess": "Deslogado com sucesso"
+  }
+}
