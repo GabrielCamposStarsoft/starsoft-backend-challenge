@@ -22,7 +22,7 @@ export class FindAllSalesUseCase implements IUseCase<
   ): Promise<[Array<SaleEntity>, number]> {
     const { page, limit, userId } = options;
 
-    const where = userId ? { userId } : {};
+    const where = userId != null ? { userId } : {};
 
     const [items, total] = await this.salesRepository.findAndCount({
       where,

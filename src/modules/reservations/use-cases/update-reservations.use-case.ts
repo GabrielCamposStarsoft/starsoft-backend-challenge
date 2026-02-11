@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { DataSource } from 'typeorm';
 import { ReservationEntity } from '../entities';
 import { SeatEntity } from '../../seats/entities';
@@ -31,6 +32,7 @@ export class UpdateReservationsUseCase {
   constructor(
     private readonly dataSource: DataSource,
     private readonly messagingProducer: MessagingProducer,
+    private readonly i18n: I18nService,
   ) {}
 
   public async execute(
@@ -43,7 +45,9 @@ export class UpdateReservationsUseCase {
         lock: { mode: 'pessimistic_write' },
       });
       if (!reservation) {
-        throw new NotFoundException(`Reservation ${id} not found`);
+        throw new NotFoundException(
+          this.i18n.t('common.reservation.notFoundWithId', { args: { id } }),
+        );
       }
 
       if (updateDto.status !== undefined) {
@@ -52,7 +56,12 @@ export class UpdateReservationsUseCase {
 
         if (!allowed.includes(updateDto?.status ?? ReservationStatus.PENDING)) {
           throw new ConflictException(
-            `Cannot transition from '${reservation.status}' to '${updateDto.status}'`,
+            this.i18n.t('common.reservation.invalidTransition', {
+              args: {
+                from: reservation.status,
+                to: String(updateDto?.status ?? ''),
+              },
+            }),
           );
         }
 

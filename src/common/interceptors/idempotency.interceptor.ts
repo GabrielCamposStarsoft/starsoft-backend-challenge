@@ -37,8 +37,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     if (raw != null) {
       // Normalize: cache may return string (e.g. Redis) or object (driver-dependent).
       // We always return the same type (object) so Nest serializes with consistent Content-Type.
-      const body: unknown =
-        typeof raw === 'string' ? JSON.parse(raw) : raw;
+      const body: unknown = typeof raw === 'string' ? JSON.parse(raw) : raw;
       return of(body);
     }
 

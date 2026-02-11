@@ -4,10 +4,20 @@ import { FindAllSessionsUseCase } from '../use-cases/find-all-sessions.use-case'
 import { FindSessionByIdUseCase } from '../use-cases/find-one-sessions.use-case';
 import { UpdateSessionsUseCase } from '../use-cases/update-sessions.use-case';
 import { DeleteSessionsUseCase } from '../use-cases/delete-sessions.use-case';
+import {
+  GetAvailabilityUseCase,
+  type IAvailabilityResponse,
+} from '../use-cases/get-availability.use-case';
 import { CreateSessionsDto } from '../dto/create-sessions.dto';
 import { UpdateSessionsDto } from '../dto/update-sessions.dto';
 import { SessionsResponseDto } from '../dto/sessions-response.dto';
 import { SessionEntity } from '../entities';
+import { IMeta } from 'src/common';
+
+interface ISessionsResponse {
+  data: SessionsResponseDto[];
+  meta: IMeta;
+}
 
 @Injectable()
 export class SessionsService {
@@ -17,6 +27,7 @@ export class SessionsService {
     private readonly findSessionByIdUseCase: FindSessionByIdUseCase,
     private readonly updateSessionsUseCase: UpdateSessionsUseCase,
     private readonly deleteSessionsUseCase: DeleteSessionsUseCase,
+    private readonly getAvailabilityUseCase: GetAvailabilityUseCase,
   ) {}
 
   public async create(
@@ -27,7 +38,10 @@ export class SessionsService {
     return this.toResponseDto(session);
   }
 
-  public async findAll(options: { page: number; limit: number }) {
+  public async findAll(options: {
+    page: number;
+    limit: number;
+  }): Promise<ISessionsResponse> {
     const [items, total]: [Array<SessionEntity>, number] =
       await this.findAllSessionsUseCase.execute(options);
 
@@ -43,7 +57,8 @@ export class SessionsService {
   }
 
   public async findOne(id: string): Promise<SessionsResponseDto> {
-    const session = await this.findSessionByIdUseCase.execute(id);
+    const session: SessionEntity =
+      await this.findSessionByIdUseCase.execute(id);
     return this.toResponseDto(session);
   }
 
@@ -51,7 +66,10 @@ export class SessionsService {
     id: string,
     updateDto: UpdateSessionsDto,
   ): Promise<SessionsResponseDto> {
-    const session = await this.updateSessionsUseCase.execute(id, updateDto);
+    const session: SessionEntity = await this.updateSessionsUseCase.execute(
+      id,
+      updateDto,
+    );
     return this.toResponseDto(session);
   }
 
@@ -71,5 +89,9 @@ export class SessionsService {
       createdAt: session.createdAt,
       updatedAt: session.updatedAt,
     };
+  }
+
+  public async getAvailability(id: string): Promise<IAvailabilityResponse> {
+    return await this.getAvailabilityUseCase.execute(id);
   }
 }

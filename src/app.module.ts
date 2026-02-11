@@ -13,7 +13,6 @@ import {
   I18nModule,
   QueryResolver,
 } from 'nestjs-i18n';
-import { DataSource } from 'typeorm';
 import { getI18nPath } from './common';
 import { CommonModule } from './common/common.module';
 import { MessagingModule } from './core/messaging/messaging.module';
@@ -76,9 +75,7 @@ import { UsersModule } from './modules/users/users.module';
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize:
-        process.env.NODE_ENV !== 'production' &&
-        process.env.DATABASE_SYNC === 'true',
+      synchronize: false,
       logging:
         process.env.NODE_ENV !== 'production' &&
         process.env.DATABASE_LOGGING === 'true',
@@ -98,6 +95,4 @@ import { UsersModule } from './modules/users/users.module';
     },
   ],
 })
-export class AppModule {
-  constructor(private readonly dataSource: DataSource) {}
-}
+export class AppModule {}

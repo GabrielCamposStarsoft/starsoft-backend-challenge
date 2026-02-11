@@ -6,7 +6,6 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  VersionColumn,
   Index,
 } from 'typeorm';
 
@@ -41,8 +40,7 @@ export class SeatEntity {
   })
   status: SeatStatus;
 
-  // -------- OPTIMISTIC LOCK --------
-  @VersionColumn({ type: 'int', default: 0 })
+  @Column({ type: 'int', default: 0 })
   version: number;
 
   // -------- TIMESTAMPS --------

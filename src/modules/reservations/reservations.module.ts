@@ -14,8 +14,6 @@ import { SeatEntity } from '../seats/entities';
 import { ReservationsExpirationScheduler } from './schedulers/reservation-expiration.scheduler';
 import { ReservationOutboxRelayService } from './services/reservation-outbox-relay.service';
 import { ReservationOutboxRelayScheduler } from './schedulers/reservation-outbox-relay.scheduler';
-import { DistributedLockService } from 'src/common';
-
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -36,7 +34,6 @@ import { DistributedLockService } from 'src/common';
     ReservationsExpirationScheduler,
     ReservationOutboxRelayService,
     ReservationOutboxRelayScheduler,
-    DistributedLockService,
   ],
   exports: [ReservationsService],
 })

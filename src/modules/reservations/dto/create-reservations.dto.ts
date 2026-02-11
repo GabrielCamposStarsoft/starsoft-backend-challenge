@@ -40,17 +40,4 @@ export class CreateReservationsDto {
   @IsUUID('4', { each: true })
   @IsNotEmpty()
   seatIds: string[];
-
-  /**
-   * The ID of the user making the reservation(s).
-   * @type {string}
-   * @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-   */
-  @ApiProperty({
-    description: 'User ID',
-    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-  })
-  @IsUUID()
-  @IsNotEmpty()
-  userId: string;
 }

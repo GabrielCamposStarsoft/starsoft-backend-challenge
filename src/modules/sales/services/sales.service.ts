@@ -25,8 +25,14 @@ export class SalesService {
     private readonly deleteSalesUseCase: DeleteSalesUseCase,
   ) {}
 
-  public async create(createDto: CreateSalesDto): Promise<SalesResponseDto> {
-    const sale: SaleEntity = await this.createSalesUseCase.execute(createDto);
+  public async create(
+    createDto: CreateSalesDto,
+    userId: string,
+  ): Promise<SalesResponseDto> {
+    const sale: SaleEntity = await this.createSalesUseCase.execute({
+      ...createDto,
+      userId,
+    });
     return this.toResponseDto(sale);
   }
 

@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
 import { Repository } from 'typeorm';
@@ -13,6 +14,7 @@ export class UpdateUsersUseCase {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
+    private readonly i18n: I18nService,
   ) {}
 
   public async execute(
@@ -23,7 +25,9 @@ export class UpdateUsersUseCase {
       where: { id },
     });
     if (!user) {
-      throw new NotFoundException(`User ${id} not found`);
+      throw new NotFoundException(
+        this.i18n.t('common.user.notFound', { args: { id } }),
+      );
     }
 
     const payload: UpdateUsersDto = { ...updateDto };

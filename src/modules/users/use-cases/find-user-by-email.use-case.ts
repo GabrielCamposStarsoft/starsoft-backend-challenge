@@ -6,9 +6,10 @@ import type { Nullable } from 'src/common';
 import { UserEntity } from '../entities';
 
 @Injectable()
-export class FindUserByEmailUseCase
-  implements IUseCase<string, Nullable<UserEntity>>
-{
+export class FindUserByEmailUseCase implements IUseCase<
+  string,
+  Nullable<UserEntity>
+> {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,

@@ -6,9 +6,7 @@ import { RefreshTokenEntity } from '../entities';
 import { hashRefreshToken } from '../utils/hash-refresh-token.util';
 
 @Injectable()
-export class InvalidateRefreshTokenUseCase
-  implements IUseCase<string, void>
-{
+export class InvalidateRefreshTokenUseCase implements IUseCase<string, void> {
   private readonly logger = new Logger(InvalidateRefreshTokenUseCase.name);
 
   constructor(

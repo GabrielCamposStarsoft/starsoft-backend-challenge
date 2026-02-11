@@ -1,19 +1,24 @@
 services:
   api:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       target: development
     env_file:
-      - .env
+      - ../.env
     ports:
       - "8088:8088"
     volumes:
-      - .:/app
+      - ..:/app
       - api_node_modules:/app/node_modules
     environment:
       NODE_ENV: development
       PORT: 8088
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: cinema
     depends_on:
       db:
         condition: service_healthy
@@ -71,7 +76,7 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     volumes:
-      - ./rabbitmq/data:/var/lib/rabbitmq
+      - ../rabbitmq/data:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s

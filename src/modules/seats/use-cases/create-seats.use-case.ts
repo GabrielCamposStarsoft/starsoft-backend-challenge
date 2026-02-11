@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { IUseCase } from 'src/common';
 import { SeatEntity } from '../entities';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,6 +19,7 @@ export class CreateSeatsUseCase implements IUseCase<
     private readonly seatsRepository: Repository<SeatEntity>,
     @InjectRepository(SessionEntity)
     private readonly sessionsRepository: Repository<SessionEntity>,
+    private readonly i18n: I18nService,
   ) {}
 
   public async execute(input: ICreateSeatsInput): Promise<SeatEntity> {
@@ -25,7 +27,11 @@ export class CreateSeatsUseCase implements IUseCase<
       where: { id: input.sessionId },
     });
     if (!session) {
-      throw new NotFoundException(`Session ${input.sessionId} not found`);
+      throw new NotFoundException(
+        this.i18n.t('common.session.notFoundWithId', {
+          args: { id: input.sessionId },
+        }),
+      );
     }
 
     const seat: SeatEntity = this.seatsRepository.create(input);

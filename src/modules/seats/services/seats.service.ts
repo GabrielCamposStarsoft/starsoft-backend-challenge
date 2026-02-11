@@ -9,7 +9,11 @@ import { UpdateSeatsDto } from '../dto/update-seats.dto';
 import { SeatsResponseDto } from '../dto/seats-response.dto';
 import { SeatEntity } from '../entities';
 import { SeatStatus } from '../enums';
-
+import { IMeta } from 'src/common';
+interface ISeatsResponse {
+  data: Array<SeatsResponseDto>;
+  meta: IMeta;
+}
 @Injectable()
 export class SeatsService {
   constructor(
@@ -29,7 +33,7 @@ export class SeatsService {
     page: number;
     limit: number;
     sessionId?: string;
-  }) {
+  }): Promise<ISeatsResponse> {
     const [items, total]: [Array<SeatEntity>, number] =
       await this.findAllSeatsUseCase.execute(options);
 

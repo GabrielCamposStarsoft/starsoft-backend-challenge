@@ -27,9 +27,13 @@ export class ReservationsService {
 
   public async create(
     createDto: CreateReservationsDto,
+    userId: string,
   ): Promise<Array<ReservationsResponseDto>> {
     const reservations: Array<ReservationEntity> =
-      await this.createReservationsUseCase.execute(createDto);
+      await this.createReservationsUseCase.execute({
+        ...createDto,
+        userId,
+      });
     return reservations.map((r: ReservationEntity) => this.toResponseDto(r));
   }
 

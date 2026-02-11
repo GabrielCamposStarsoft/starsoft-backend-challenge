@@ -17,7 +17,8 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-CMD ["pnpm", "run", "dev"]
+# Roda migrations antes de iniciar o dev (evita "relation does not exist" ao subir com compose)
+ENTRYPOINT ["sh", "-c", "pnpm run migration:run && exec pnpm run dev"]
 
 
 ########################################################
@@ -43,4 +44,6 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
 RUN npm install -g pnpm && pnpm install --frozen-lockfile --prod
 
-CMD ["node", "dist/index.js"]
+# Roda migrations e depois inicia a API (DATABASE_* devem vir do env no compose)
+ENTRYPOINT ["sh", "-c", "node ./node_modules/typeorm/cli.js migration:run -d ./dist/data-source.js && exec \"$@\"", "sh"]
+CMD ["node", "dist/main.js"]

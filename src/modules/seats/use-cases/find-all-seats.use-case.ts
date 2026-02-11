@@ -19,7 +19,7 @@ export class FindAllSeatsUseCase {
   ): Promise<[SeatEntity[], number]> {
     const { page, limit, sessionId } = input;
 
-    const where = sessionId ? { sessionId } : {};
+    const where = sessionId != null ? { sessionId } : {};
 
     const [items, total] = await this.seatsRepository.findAndCount({
       where,

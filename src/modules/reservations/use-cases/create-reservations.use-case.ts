@@ -4,6 +4,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import type { IUseCase, Nullable } from 'src/common';
 import { DataSource, EntityManager, UpdateResult } from 'typeorm';
 import { SeatEntity } from '../../seats/entities';
@@ -22,7 +23,10 @@ export class CreateReservationsUseCase implements IUseCase<
 > {
   private readonly logger: Logger = new Logger(CreateReservationsUseCase.name);
 
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly i18n: I18nService,
+  ) {}
 
   public async execute(
     input: ICreateReservationsInput,
@@ -37,13 +41,20 @@ export class CreateReservationsUseCase implements IUseCase<
         },
       );
       if (!session)
-        throw new NotFoundException(`Session ${sessionId} not found`);
+        throw new NotFoundException(
+          this.i18n.t('common.session.notFoundWithId', {
+            args: { id: sessionId },
+          }),
+        );
 
       const user: Nullable<UserEntity> = await manager.findOne(UserEntity, {
         where: { id: userId },
       });
 
-      if (!user) throw new NotFoundException(`User ${userId} not found`);
+      if (!user)
+        throw new NotFoundException(
+          this.i18n.t('common.user.notFound', { args: { id: userId } }),
+        );
 
       const sortedSeatIds: Array<string> = [...seatIds].sort();
       const reservations: Array<ReservationEntity> = [];
@@ -60,7 +71,9 @@ export class CreateReservationsUseCase implements IUseCase<
           .execute();
 
         if (updateResult.affected === 0) {
-          throw new ConflictException(`Seat ${seatId} is not available`);
+          throw new ConflictException(
+            this.i18n.t('common.seat.notAvailable', { args: { id: seatId } }),
+          );
         }
 
         const reservation: ReservationEntity = manager.create(

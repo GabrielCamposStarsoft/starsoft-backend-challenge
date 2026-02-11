@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import type { IUseCase } from 'src/common';
+import type { IUseCase, Optional } from 'src/common';
 import { UserEntity } from '../../users/entities';
 import type { IJwtAccessPayload } from '../interfaces';
 import {
@@ -16,23 +16,24 @@ export interface ISignAccessTokenOutput {
 }
 
 @Injectable()
-export class SignAccessTokenUseCase
-  implements IUseCase<UserEntity, ISignAccessTokenOutput>
-{
+export class SignAccessTokenUseCase implements IUseCase<
+  UserEntity,
+  ISignAccessTokenOutput
+> {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
-
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async execute(user: UserEntity): Promise<ISignAccessTokenOutput> {
     const payload: IJwtAccessPayload = {
       sub: user.id,
       email: user.email,
       type: 'access',
     };
-    const secret = this.getJwtSecret();
-    const expiresInSeconds = this.getAccessExpirationSeconds();
-    const accessToken = this.jwtService.sign(payload, {
+    const secret: Optional<string> = this.getJwtSecret();
+    const expiresInSeconds: number = this.getAccessExpirationSeconds();
+    const accessToken: string = this.jwtService.sign(payload, {
       secret,
       expiresIn: expiresInSeconds,
     });

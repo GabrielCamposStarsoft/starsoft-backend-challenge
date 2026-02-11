@@ -7,7 +7,6 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  VersionColumn,
 } from 'typeorm';
 
 import { SeatEntity } from '../../seats/entities';
@@ -73,10 +72,6 @@ export class ReservationEntity {
   })
   updatedAt: Date;
 
-  // ---------------- OPTIMISTIC LOCK ----------------
-  @VersionColumn({
-    type: 'int',
-    default: 0,
-  })
+  @Column({ type: 'int', default: 0 })
   version: number;
 }

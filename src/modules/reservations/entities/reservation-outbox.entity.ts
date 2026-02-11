@@ -10,19 +10,19 @@ export class ReservationOutboxEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ name: 'reservationId' })
   reservationId: string;
 
-  @Column()
+  @Column({ name: 'seatId' })
   seatId: string;
 
-  @Column()
+  @Column({ name: 'sessionId' })
   sessionId: string;
 
-  @Column()
+  @Column({ name: 'userId' })
   userId: string;
 
-  @Column()
+  @Column({ name: 'expiresAt' })
   expiresAt: Date;
 
   @Column({ default: false })

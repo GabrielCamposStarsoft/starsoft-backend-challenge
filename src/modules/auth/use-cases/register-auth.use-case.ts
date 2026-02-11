@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import type { IUseCase } from 'src/common';
 import type { Nullable } from 'src/common';
 import { UserEntity } from '../../users/entities';
@@ -8,20 +9,25 @@ import type { UsersResponseDto } from '../../users/dto/users-response.dto';
 import type { RegisterDto } from '../dtos/register.dto';
 
 @Injectable()
-export class RegisterAuthUseCase
-  implements IUseCase<RegisterDto, UsersResponseDto>
-{
+export class RegisterAuthUseCase implements IUseCase<
+  RegisterDto,
+  UsersResponseDto
+> {
   private readonly logger = new Logger(RegisterAuthUseCase.name);
 
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly i18n: I18nService,
+  ) {}
 
   public async execute(dto: RegisterDto): Promise<UsersResponseDto> {
-    const existing: Nullable<UserEntity> =
-      await this.usersService.findByEmail(dto.email);
+    const existing: Nullable<UserEntity> = await this.usersService.findByEmail(
+      dto.email,
+    );
 
     if (existing) {
       throw new ConflictException(
-        `User with email ${dto.email} already exists`,
+        this.i18n.t('common.user.emailExists', { args: { email: dto.email } }),
       );
     }
 

@@ -16,6 +16,37 @@
   "auth": {
     "invalidCredentials": "Credenciais inválidas",
     "invalidOrExpiredToken": "Token de atualização inválido ou expirado",
-    "logoutSuccess": "Deslogado com sucesso"
+    "logoutSuccess": "Deslogado com sucesso",
+    "required": "Autenticação necessária",
+    "refreshRequired": "Refresh token é obrigatório",
+    "invalidTokenType": "Tipo de token inválido",
+    "userNoLongerExists": "Usuário não existe mais"
+  },
+  "reservation": {
+    "notFound": "Reserva não encontrada",
+    "notFoundWithId": "Reserva {id} não encontrada",
+    "notPending": "Reserva {id} não está pendente",
+    "expired": "Reserva {id} expirou",
+    "cannotDeleteConfirmed": "Não é possível excluir uma reserva confirmada (já vendida)",
+    "invalidTransition": "Não é possível transicionar de '{from}' para '{to}'"
+  },
+  "sale": {
+    "notFound": "Venda {id} não encontrada",
+    "ownReservationsOnly": "Você só pode confirmar pagamento das suas próprias reservas"
+  },
+  "seat": {
+    "notFound": "Assento não encontrado",
+    "notAvailable": "Assento {id} não está disponível",
+    "alreadySold": "Assento já vendido",
+    "sold": "Assento está vendido"
+  },
+  "session": {
+    "notFound": "Sessão não encontrada",
+    "notFoundWithId": "Sessão {id} não encontrada",
+    "finished": "Sessão encerrada"
+  },
+  "user": {
+    "notFound": "Usuário {id} não encontrado",
+    "emailExists": "Já existe usuário com o e-mail {email}"
   }
 }

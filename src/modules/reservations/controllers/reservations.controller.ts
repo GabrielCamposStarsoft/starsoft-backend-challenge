@@ -9,9 +9,16 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   CreateReservationsDto,
   FindAllReservationsDto,
@@ -21,6 +28,9 @@ import {
 import { ReservationsService } from '../services';
 import { IdempotencyInterceptor } from 'src/common';
 import type { IMeta } from 'src/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import type { IRequestUser } from '../../auth/interfaces/jwt-payload.interface';
 
 interface IFindAllReservationsResponse {
   data: ReservationsResponseDto[];
@@ -28,6 +38,8 @@ interface IFindAllReservationsResponse {
 }
 
 @ApiTags('reservations')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('reservations')
 export class ReservationsController {
   /**
@@ -40,7 +52,9 @@ export class ReservationsController {
 
   /**
    * Reserve one or more seats for a session.
+   * The userId is extracted from the authenticated JWT token.
    * @param {CreateReservationsDto} createDto - Data for creating reservations.
+   * @param {IRequestUser} user - Authenticated user from JWT.
    * @returns {Promise<ReservationsResponseDto[]>} Array of created reservation DTOs.
    */
   @Post()
@@ -54,30 +68,35 @@ export class ReservationsController {
   @HttpCode(HttpStatus.CREATED)
   public create(
     @Body() createDto: CreateReservationsDto,
+    @CurrentUser() user: IRequestUser,
   ): Promise<ReservationsResponseDto[]> {
-    return this.reservationsService.create(createDto);
+    return this.reservationsService.create(createDto, user.id);
   }
 
   /**
-   * Get all reservations with optional filters (pagination, userId, sessionId, status).
+   * Get all reservations for the authenticated user with optional filters.
    * @param {FindAllReservationsDto} findAllReservationsDto - DTO containing query filters.
-   * @returns {Promise<any>} List and meta info of reservations.
+   * @param {IRequestUser} user - Authenticated user from JWT.
+   * @returns {Promise<IFindAllReservationsResponse>} List and meta info of reservations.
    */
   @Get()
-  @ApiOperation({ summary: 'Get all reservations with optional filters' })
+  @ApiOperation({
+    summary: 'Get all reservations for the authenticated user',
+  })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Return all reservations.',
+    description: 'Return all reservations for the authenticated user.',
     type: [ReservationsResponseDto],
   })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'userId', required: false, type: String })
   @ApiQuery({ name: 'sessionId', required: false, type: String })
   @ApiQuery({ name: 'status', required: false, type: String })
   public async findAll(
     @Query() findAllReservationsDto: FindAllReservationsDto,
+    @CurrentUser() user: IRequestUser,
   ): Promise<IFindAllReservationsResponse> {
+    findAllReservationsDto.userId = user.id;
     return this.reservationsService.findAll(findAllReservationsDto);
   }
 

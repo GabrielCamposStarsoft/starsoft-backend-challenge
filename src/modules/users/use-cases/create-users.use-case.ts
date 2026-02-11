@@ -1,4 +1,5 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
 import { Repository } from 'typeorm';
@@ -16,6 +17,7 @@ export class CreateUsersUseCase implements IUseCase<
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
+    private readonly i18n: I18nService,
   ) {}
 
   public async execute(createDto: CreateUsersDto): Promise<UserEntity> {
@@ -24,7 +26,9 @@ export class CreateUsersUseCase implements IUseCase<
     });
     if (existing) {
       throw new ConflictException(
-        `User with email ${createDto.email} already exists`,
+        this.i18n.t('common.user.emailExists', {
+          args: { email: createDto.email },
+        }),
       );
     }
 

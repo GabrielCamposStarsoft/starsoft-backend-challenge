@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ReservationEntity } from '../entities';
@@ -14,6 +15,7 @@ export class FindByIdReservationUseCase implements IUseCase<
   constructor(
     @InjectRepository(ReservationEntity)
     private readonly reservationsRepository: Repository<ReservationEntity>,
+    private readonly i18n: I18nService,
   ) {}
 
   public async execute(
@@ -25,7 +27,7 @@ export class FindByIdReservationUseCase implements IUseCase<
     });
     if (!reservation) {
       this.logger.error(`Reservation not found with id: ${id}`);
-      throw new NotFoundException('Reservation not found');
+      throw new NotFoundException(this.i18n.t('common.reservation.notFound'));
     }
     return reservation;
   }

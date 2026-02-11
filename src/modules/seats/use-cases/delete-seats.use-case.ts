@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -20,6 +21,7 @@ export class DeleteSeatsUseCase {
 
     @InjectRepository(SessionEntity)
     private readonly sessionsRepository: Repository<SessionEntity>,
+    private readonly i18n: I18nService,
   ) {}
 
   public async execute(input: IDeleteSeatsInput): Promise<void> {
@@ -30,7 +32,7 @@ export class DeleteSeatsUseCase {
     });
 
     if (!seat) {
-      throw new NotFoundException('Seat not found');
+      throw new NotFoundException(this.i18n.t('common.seat.notFound'));
     }
 
     const session = await this.sessionsRepository.findOne({
@@ -38,15 +40,15 @@ export class DeleteSeatsUseCase {
     });
 
     if (!session) {
-      throw new NotFoundException('Session not found');
+      throw new NotFoundException(this.i18n.t('common.session.notFound'));
     }
 
     if (session.status === SessionStatus.FINISHED) {
-      throw new ConflictException('Session is finished');
+      throw new ConflictException(this.i18n.t('common.session.finished'));
     }
 
     if (seat.status === SeatStatus.SOLD) {
-      throw new ConflictException('Seat is sold');
+      throw new ConflictException(this.i18n.t('common.seat.sold'));
     }
 
     await this.seatsRepository.delete({ id });

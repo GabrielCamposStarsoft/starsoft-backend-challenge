@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(find /home/gabrielcampos/Desktop/starsoft-backend-challenge/src -type f -name \"*.ts\" -exec sh -c 'lines=$\\(wc -l < \"\"$1\"\" 2>/dev/null\\); [ \"\"$lines\"\" -gt 5 ] && echo \"\"$lines $1\"\"' _ {} ;)",
+      "Bash(find:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm list:*)",
+      "Bash(pnpm remove:*)",
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(cat:*)",
+      "Bash(grep:*)",
+      "Bash(git -C /home/gabrielcampos/Desktop/starsoft-backend-challenge rm:*)",
+      "Bash(xargs:*)",
+      "Bash(npx eslint:*)"
+    ]
+  }
+}

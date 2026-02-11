@@ -4,6 +4,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { DataSource } from 'typeorm';
 import { MessagingProducer } from '../../../core/messaging/producers/messaging.producer';
 import { SeatEntity } from '../../seats/entities';
@@ -23,6 +24,7 @@ export class DeleteReservationsUseCase implements IUseCase<
   constructor(
     private readonly dataSource: DataSource,
     private readonly messagingProducer: MessagingProducer,
+    private readonly i18n: I18nService,
   ) {}
 
   public async execute(input: IDeleteReservationsInput): Promise<void> {
@@ -34,12 +36,12 @@ export class DeleteReservationsUseCase implements IUseCase<
       });
       if (!reservation) {
         this.logger.error(`Reservation not found with id: ${id}`);
-        throw new NotFoundException('Reservation not found');
+        throw new NotFoundException(this.i18n.t('common.reservation.notFound'));
       }
 
       if (reservation.status === ReservationStatus.CONFIRMED) {
         throw new ConflictException(
-          'Cannot delete a confirmed reservation (already sold)',
+          this.i18n.t('common.reservation.cannotDeleteConfirmed'),
         );
       }
 

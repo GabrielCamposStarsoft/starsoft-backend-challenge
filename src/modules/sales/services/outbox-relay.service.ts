@@ -4,7 +4,10 @@ import { Repository } from 'typeorm';
 import { SaleOutboxEntity } from '../entities/sale-outbox.entity';
 import { MessagingProducer } from '../../../core/messaging/producers/messaging.producer';
 import type { PaymentConfirmedEvent } from '../../../core/messaging/events/payment-confirmed.event';
-import { BATCH_SIZE, OUTBOX_EVENT_PAYMENT_CONFIRMED } from '../constants/outbox.constants';
+import {
+  BATCH_SIZE,
+  OUTBOX_EVENT_PAYMENT_CONFIRMED,
+} from '../constants/outbox.constants';
 
 @Injectable()
 export class OutboxRelayService {

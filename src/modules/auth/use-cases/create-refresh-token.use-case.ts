@@ -14,9 +14,7 @@ import {
 import { hashRefreshToken } from '../utils/hash-refresh-token.util';
 
 @Injectable()
-export class CreateRefreshTokenUseCase
-  implements IUseCase<UserEntity, string>
-{
+export class CreateRefreshTokenUseCase implements IUseCase<UserEntity, string> {
   constructor(
     @InjectRepository(RefreshTokenEntity)
     private readonly refreshTokenRepository: Repository<RefreshTokenEntity>,

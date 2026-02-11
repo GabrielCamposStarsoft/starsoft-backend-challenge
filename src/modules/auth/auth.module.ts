@@ -42,7 +42,13 @@ import type { JwtModuleOptions } from '@nestjs/jwt';
     RouterModule.register([{ path: 'auth', module: AuthModule }]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, ...AuthUseCases, JwtStrategy, JwtAuthGuard, JwtRefreshGuard],
+  providers: [
+    AuthService,
+    ...AuthUseCases,
+    JwtStrategy,
+    JwtAuthGuard,
+    JwtRefreshGuard,
+  ],
   exports: [AuthService, JwtModule, JwtAuthGuard],
 })
 export class AuthModule {}

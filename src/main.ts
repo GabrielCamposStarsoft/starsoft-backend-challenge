@@ -11,9 +11,8 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 import type { FastifyInstance } from 'fastify';
 import { I18nValidationExceptionFilter, I18nValidationPipe } from 'nestjs-i18n';
 import { AllExceptionsFilter, type Optional } from 'src/common';
-import { AppDataSource } from './app-data-source';
 import { AppModule } from './app.module';
-import { RMQ_QUEUE } from './common/constants/events.constants';
+import { RMQ_QUEUE, RMQ_DLX, RMQ_DLQ } from './common';
 
 const bootstrap = async (): Promise<void> => {
   const app = await NestFactory.create<INestApplication<FastifyInstance>>(
@@ -32,7 +31,13 @@ const bootstrap = async (): Promise<void> => {
     options: {
       urls: [rmqUrl],
       queue: RMQ_QUEUE,
-      queueOptions: { durable: true },
+      queueOptions: {
+        durable: true,
+        arguments: {
+          'x-dead-letter-exchange': RMQ_DLX,
+          'x-dead-letter-routing-key': RMQ_DLQ,
+        },
+      },
       noAck: false,
     },
   });
@@ -51,20 +56,10 @@ const bootstrap = async (): Promise<void> => {
       'API para venda de ingressos de cinema com controle de concorrência',
     )
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
-  if (process.env.NODE_ENV !== 'production') {
-    try {
-      await AppDataSource.initialize();
-      await AppDataSource.runMigrations();
-    } catch (error) {
-      Logger.error('Error initializing database', error);
-      process.exit(1);
-    }
-  }
-
   const document: OpenAPIObject = SwaggerModule.createDocument(app, config);
-  /* eslint-disable @typescript-eslint/no-unsafe-call */
 
   app.use(
     '/api-docs',

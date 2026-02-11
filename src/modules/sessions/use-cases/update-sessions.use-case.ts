@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UpdateSessionsDto } from '../dto/update-sessions.dto';
@@ -12,6 +13,7 @@ export class UpdateSessionsUseCase {
   constructor(
     @InjectRepository(SessionEntity)
     private readonly sessionsRepository: Repository<SessionEntity>,
+    private readonly i18n: I18nService,
   ) {}
 
   public async execute(
@@ -20,17 +22,21 @@ export class UpdateSessionsUseCase {
   ): Promise<SessionEntity> {
     const session = await this.sessionsRepository.findOne({ where: { id } });
     if (!session) {
-      throw new NotFoundException(`Session ${id} not found`);
+      throw new NotFoundException(
+        this.i18n.t('common.session.notFoundWithId', { args: { id } }),
+      );
     }
 
-    if (updateDto.movieTitle) session.movieTitle = updateDto.movieTitle;
-    if (updateDto.roomName) session.roomName = updateDto.roomName;
-    if (updateDto.startTime)
+    if (updateDto.movieTitle != null) session.movieTitle = updateDto.movieTitle;
+    if (updateDto.roomName != null) session.roomName = updateDto.roomName;
+    if (updateDto.startTime != null)
       session.startTime = new Date(updateDto.startTime);
-    if (updateDto.endTime) session.endTime = new Date(updateDto.endTime);
+    if (updateDto.endTime != null)
+      session.endTime = new Date(updateDto.endTime);
     if (updateDto.ticketPrice !== undefined)
       session.ticketPrice = updateDto.ticketPrice;
-    if (updateDto.status) session.status = updateDto.status as SessionStatus;
+    if (updateDto.status != null)
+      session.status = updateDto.status as SessionStatus;
 
     const updated = await this.sessionsRepository.save(session);
 

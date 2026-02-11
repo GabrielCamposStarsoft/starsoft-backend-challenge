@@ -16,10 +16,12 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { I18nService } from 'nestjs-i18n';
 import { DataSource, QueryRunner } from 'typeorm';
 
 import { IUseCase, Nullable } from 'src/common';
@@ -38,7 +40,10 @@ export class CreateSalesUseCase implements IUseCase<
 > {
   private readonly logger: Logger = new Logger(CreateSalesUseCase.name);
 
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly i18n: I18nService,
+  ) {}
 
   /**
    * Executes the sale creation process within a transaction, ensuring proper state validation and updates.
@@ -54,7 +59,7 @@ export class CreateSalesUseCase implements IUseCase<
     await queryRunner.startTransaction();
 
     try {
-      const { reservationId }: ICreateSalesInput = input;
+      const { reservationId, userId }: ICreateSalesInput = input;
 
       // Step 1: Lock reservation row for update (pessimistic write lock)
       const reservation: Nullable<ReservationEntity> =
@@ -65,16 +70,29 @@ export class CreateSalesUseCase implements IUseCase<
 
       // Step 2: Validate reservation
       if (!reservation) {
-        throw new NotFoundException(`Reservation ${reservationId} not found`);
+        throw new NotFoundException(
+          this.i18n.t('common.reservation.notFoundWithId', {
+            args: { id: reservationId },
+          }),
+        );
+      }
+      if (reservation.userId !== userId) {
+        throw new ForbiddenException(
+          this.i18n.t('common.sale.ownReservationsOnly'),
+        );
       }
       if (reservation.status !== ReservationStatus.PENDING) {
         throw new ConflictException(
-          `Reservation ${reservationId} is not pending`,
+          this.i18n.t('common.reservation.notPending', {
+            args: { id: reservationId },
+          }),
         );
       }
       if (new Date() > new Date(reservation.expiresAt)) {
         throw new BadRequestException(
-          `Reservation ${reservationId} has expired`,
+          this.i18n.t('common.reservation.expired', {
+            args: { id: reservationId },
+          }),
         );
       }
 
@@ -89,10 +107,10 @@ export class CreateSalesUseCase implements IUseCase<
 
       // Step 4: Validate seat
       if (!seat) {
-        throw new NotFoundException(`Seat not found`);
+        throw new NotFoundException(this.i18n.t('common.seat.notFound'));
       }
       if (seat.status === SeatStatus.SOLD) {
-        throw new ConflictException(`Seat already sold`);
+        throw new ConflictException(this.i18n.t('common.seat.alreadySold'));
       }
 
       // Step 5: Validate session
@@ -102,7 +120,9 @@ export class CreateSalesUseCase implements IUseCase<
         });
       if (!session) {
         throw new NotFoundException(
-          `Session ${reservation.sessionId} not found`,
+          this.i18n.t('common.session.notFoundWithId', {
+            args: { id: reservation.sessionId },
+          }),
         );
       }
 
@@ -123,7 +143,6 @@ export class CreateSalesUseCase implements IUseCase<
       const savedSale: SaleEntity = await queryRunner.manager.save(sale);
 
       // Step 8: Write outbox event for distributed consistency
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- SaleOutboxEntity from barrel export
       const outboxEvent = queryRunner.manager.create(SaleOutboxEntity, {
         event: 'PaymentConfirmed',
         payload: {

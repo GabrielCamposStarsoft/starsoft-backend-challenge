@@ -16,6 +16,37 @@
   "auth": {
     "invalidCredentials": "Invalid credentials",
     "invalidOrExpiredToken": "Invalid or expired refresh token",
-    "logoutSuccess": "Logged out successfully"
+    "logoutSuccess": "Logged out successfully",
+    "required": "Authentication required",
+    "refreshRequired": "Refresh token is required",
+    "invalidTokenType": "Invalid token type",
+    "userNoLongerExists": "User no longer exists"
+  },
+  "reservation": {
+    "notFound": "Reservation not found",
+    "notFoundWithId": "Reservation {id} not found",
+    "notPending": "Reservation {id} is not pending",
+    "expired": "Reservation {id} has expired",
+    "cannotDeleteConfirmed": "Cannot delete a confirmed reservation (already sold)",
+    "invalidTransition": "Cannot transition from '{from}' to '{to}'"
+  },
+  "sale": {
+    "notFound": "Sale {id} not found",
+    "ownReservationsOnly": "You can only confirm payment for your own reservations"
+  },
+  "seat": {
+    "notFound": "Seat not found",
+    "notAvailable": "Seat {id} is not available",
+    "alreadySold": "Seat already sold",
+    "sold": "Seat is sold"
+  },
+  "session": {
+    "notFound": "Session not found",
+    "notFoundWithId": "Session {id} not found",
+    "finished": "Session is finished"
+  },
+  "user": {
+    "notFound": "User {id} not found",
+    "emailExists": "User with email {email} already exists"
   }
 }

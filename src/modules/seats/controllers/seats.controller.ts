@@ -27,10 +27,10 @@ export class SeatsController {
   constructor(private readonly seatsService: SeatsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new seats' })
+  @ApiOperation({ summary: 'Create a new seat' })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    description: 'The seats has been successfully created.',
+    description: 'The seat has been successfully created.',
     type: SeatsResponseDto,
   })
   @HttpCode(HttpStatus.CREATED)
@@ -44,7 +44,7 @@ export class SeatsController {
   @ApiOperation({ summary: 'Get all seats' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Return all seatss.',
+    description: 'Return all seats.',
     type: [SeatsResponseDto],
   })
   public async findAll(
@@ -56,30 +56,30 @@ export class SeatsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a seats by id' })
+  @ApiOperation({ summary: 'Get a seat by id' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Return the seats.',
+    description: 'Return the seat.',
     type: SeatsResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Seats not found.',
+    description: 'Seat not found.',
   })
   public async findOne(@Param('id') id: string): Promise<SeatsResponseDto> {
     return this.seatsService.findOne(id);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update a seats' })
+  @ApiOperation({ summary: 'Update a seat' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'The seats has been successfully updated.',
+    description: 'The seat has been successfully updated.',
     type: SeatsResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Seats not found.',
+    description: 'Seat not found.',
   })
   public async update(
     @Param('id') id: string,
@@ -89,14 +89,14 @@ export class SeatsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a seats' })
+  @ApiOperation({ summary: 'Delete a seat' })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
-    description: 'The seats has been successfully deleted.',
+    description: 'The seat has been successfully deleted.',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Seats not found.',
+    description: 'Seat not found.',
   })
   @HttpCode(HttpStatus.NO_CONTENT)
   public async remove(@Param('id') id: string): Promise<void> {

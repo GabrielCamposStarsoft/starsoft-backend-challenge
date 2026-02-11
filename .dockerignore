@@ -48,7 +48,5 @@ eslint.config.mjs
 .editorconfig
 
 # Docker (avoid recursive copy)
-Dockerfile
+docker
 .dockerignore
-compose.yml
-compose.*.yml

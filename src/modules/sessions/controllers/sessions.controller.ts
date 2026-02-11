@@ -15,6 +15,7 @@ import { SessionsService } from '../services/sessions.service';
 import { CreateSessionsDto } from '../dto/create-sessions.dto';
 import { UpdateSessionsDto } from '../dto/update-sessions.dto';
 import { SessionsResponseDto } from '../dto/sessions-response.dto';
+import type { IAvailabilityResponse } from '../use-cases/get-availability.use-case';
 
 interface ISessionsResponse {
   data: SessionsResponseDto[];
@@ -30,7 +31,7 @@ export class SessionsController {
   @ApiOperation({ summary: 'Create a new session' })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    description: 'The sessions has been successfully created.',
+    description: 'The session has been successfully created.',
     type: SessionsResponseDto,
   })
   @HttpCode(HttpStatus.CREATED)
@@ -44,7 +45,7 @@ export class SessionsController {
   @ApiOperation({ summary: 'Get all sessions' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Return all sessionss.',
+    description: 'Return all sessions.',
     type: [SessionsResponseDto],
   })
   public async findAll(
@@ -55,30 +56,30 @@ export class SessionsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a sessions by id' })
+  @ApiOperation({ summary: 'Get a session by id' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Return the sessions.',
+    description: 'Return the session.',
     type: SessionsResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Sessions not found.',
+    description: 'Session not found.',
   })
   public async findOne(@Param('id') id: string): Promise<SessionsResponseDto> {
     return this.sessionsService.findOne(id);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update a sessions' })
+  @ApiOperation({ summary: 'Update a session' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'The sessions has been successfully updated.',
+    description: 'The session has been successfully updated.',
     type: SessionsResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Sessions not found.',
+    description: 'Session not found.',
   })
   public async update(
     @Param('id') id: string,
@@ -88,17 +89,33 @@ export class SessionsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a sessions' })
+  @ApiOperation({ summary: 'Delete a session' })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
-    description: 'The sessions has been successfully deleted.',
+    description: 'The session has been successfully deleted.',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
-    description: 'Sessions not found.',
+    description: 'Session not found.',
   })
   @HttpCode(HttpStatus.NO_CONTENT)
   public async remove(@Param('id') id: string): Promise<void> {
     return this.sessionsService.remove(id);
+  }
+
+  @Get(':id/availability')
+  @ApiOperation({ summary: 'Get seat availability for a session' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Returns available seats for the session.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Session not found.',
+  })
+  public async getAvailability(
+    @Param('id') id: string,
+  ): Promise<IAvailabilityResponse> {
+    return await this.sessionsService.getAvailability(id);
   }
 }
