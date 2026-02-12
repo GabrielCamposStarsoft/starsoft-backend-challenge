@@ -13,7 +13,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import { Observable, of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { DISTRIBUTED_LOCK_KEY, DISTRIBUTED_LOCK_TTL } from '../constants';

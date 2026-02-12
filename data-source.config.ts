@@ -9,7 +9,7 @@
  */
 
 import { DataSource } from 'typeorm';
-import { join as joinPath } from 'path';
+import { join as joinPath } from 'node:path';
 import { typeOrmConnectionOptions } from './database-options';
 
 export default new DataSource({
