@@ -1,8 +1,17 @@
+/**
+ * @fileoverview Reservations module.
+ *
+ * Manages seat reservations with outbox pattern for events. Includes schedulers
+ * for expiration and outbox relay. Publishes reservation.created, reservation.expired, seat.released.
+ *
+ * @module reservations
+ */
+
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { MessagingModule } from '../../core/messaging/messaging.module';
-import { ReservationsController } from './controllers/reservations.controller';
-import { ReservationsService } from './services/reservations.service';
+import { ReservationsController } from './controllers';
+import { ReservationsService } from './services';
 import { ReservationsUseCases } from './use-cases';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {

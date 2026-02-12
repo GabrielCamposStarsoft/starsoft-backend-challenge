@@ -1,15 +1,24 @@
+/**
+ * @fileoverview Interceptor for distributed locking on route handlers.
+ *
+ * Reads @DistributedLock metadata (key, TTL), acquires Redis lock before execution,
+ * and releases on completion. If lock cannot be acquired, skips handler and returns undefined.
+ *
+ * @interceptor distributed-lock
+ */
+
 import {
+  CallHandler,
+  ExecutionContext,
   Injectable,
   NestInterceptor,
-  ExecutionContext,
-  CallHandler,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import type { Reflector } from '@nestjs/core';
 import { Observable, of } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import { DistributedLockService } from '../services/distributed-lock.service';
 import { DISTRIBUTED_LOCK_KEY, DISTRIBUTED_LOCK_TTL } from '../constants';
-import { Optional } from '../types';
+import { DistributedLockService } from '../services/distributed-lock.service';
+import type { Optional } from '../types';
 
 /**
  * Interceptor that applies distributed locking to route handlers using the DistributedLock decorator.
@@ -43,7 +52,7 @@ export class DistributedLockInterceptor implements NestInterceptor {
    * @param next The next handler in the pipeline.
    * @returns Observable emitting handler result or undefined if lock was not acquired.
    */
-  async intercept(
+  public async intercept(
     context: ExecutionContext,
     next: CallHandler,
   ): Promise<Observable<unknown>> {
@@ -79,6 +88,6 @@ export class DistributedLockInterceptor implements NestInterceptor {
      */
     return next
       .handle()
-      .pipe(finalize(() => void this.lockService.release(key)));
+      .pipe(finalize((): void => void this.lockService.release(key)));
   }
 }

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Use case for relaying reservation created outbox events to the messaging broker.
+ *
+ * @usecase relay-reservation-created-outbox-use-case
+ */
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

@@ -11,11 +11,12 @@
     "conflict": "Resource already exists",
     "unauthorized": "Invalid credentials",
     "forbidden": "Access denied",
-    "badRequest": "Bad request"
+    "insufficientRole": "Insufficient permissions. Required role: {roles}",
+    "badRequest": "Invalid request"
   },
   "auth": {
     "invalidCredentials": "Invalid credentials",
-    "invalidOrExpiredToken": "Invalid or expired refresh token",
+    "invalidOrExpiredToken": "Refresh token is invalid or expired",
     "logoutSuccess": "Logged out successfully",
     "required": "Authentication required",
     "refreshRequired": "Refresh token is required",
@@ -28,7 +29,8 @@
     "notPending": "Reservation {id} is not pending",
     "expired": "Reservation {id} has expired",
     "cannotDeleteConfirmed": "Cannot delete a confirmed reservation (already sold)",
-    "invalidTransition": "Cannot transition from '{from}' to '{to}'"
+    "invalidTransition": "Cannot transition from '{from}' to '{to}'",
+    "ownOnly": "You can only modify your own reservations"
   },
   "sale": {
     "notFound": "Sale {id} not found",
@@ -37,16 +39,19 @@
   "seat": {
     "notFound": "Seat not found",
     "notAvailable": "Seat {id} is not available",
+    "notInSession": "Seat {id} does not belong to this session",
     "alreadySold": "Seat already sold",
-    "sold": "Seat is sold"
+    "sold": "Seat is sold",
+    "notReservedForSale": "Seat must be reserved to confirm payment"
   },
   "session": {
     "notFound": "Session not found",
     "notFoundWithId": "Session {id} not found",
-    "finished": "Session is finished"
+    "finished": "Session ended",
+    "notActive": "Cannot reserve seats for a session that is not active"
   },
   "user": {
     "notFound": "User {id} not found",
-    "emailExists": "User with email {email} already exists"
+    "emailExists": "A user with the email {email} already exists"
   }
 }

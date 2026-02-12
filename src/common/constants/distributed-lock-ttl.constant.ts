@@ -1,7 +1,19 @@
 /**
- * Constant representing the TTL for distributed locking.
+ * @fileoverview Default TTL for distributed locks.
  *
- * @constant {number}
- * @property {number} DISTRIBUTED_LOCK_TTL - The TTL for distributed locking.
+ * Used by DistributedLockInterceptor when no custom TTL is provided via
+ * @DistributedLock. Lock auto-releases after this many seconds to prevent
+ * deadlocks from crashed processes.
+ *
+ * @module distributed-lock-ttl
  */
-export const DISTRIBUTED_LOCK_TTL = 25;
+
+/**
+ * Default lock TTL in seconds.
+ *
+ * @description Locks expire automatically. Choose a value longer than
+ * typical handler duration but short enough to recover from failures.
+ *
+ * @constant
+ */
+export const DISTRIBUTED_LOCK_TTL: number = 25;

@@ -1,25 +1,30 @@
 services:
+  # -----------------------------------------------------------------------------
+  # api: Main Node.js application container for the Cinema backend API.
+  # -----------------------------------------------------------------------------
   api:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      target: development
+      context: ..  # Builds from the project root.
+      dockerfile: docker/Dockerfile  # Uses custom Dockerfile for multi-stage builds.
+      target: development  # Uses the 'development' stage for hot-reload and live dev.
     env_file:
-      - ../.env
+      - ../.env  # Loads environment variables from external .env file for consistency and secrets.
     ports:
-      - "8088:8088"
+      - "8088:8088"  # Exposes API on host port 8088.
     volumes:
-      - ..:/app
-      - api_node_modules:/app/node_modules
+      - ..:/app  # Mounts project root into container for live code updates (development).
+      - api_node_modules:/app/node_modules  # Persists node_modules with Docker volume to avoid host/OS issues.
     environment:
-      NODE_ENV: development
-      PORT: 8088
-      DATABASE_HOST: db
-      DATABASE_PORT: 5432
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: postgres
-      DATABASE_NAME: cinema
+      NODE_ENV: development  # Sets Node environment to development mode.
+      PORT: 8088  # API listens on port 8088.
+      DATABASE_HOST: db  # Uses 'db' service (see below) as PostgreSQL host.
+      DATABASE_PORT: 5432  # Standard PostgreSQL port.
+      DATABASE_USER: postgres  # Database username (dev default).
+      DATABASE_PASSWORD: postgres  # Database password (dev default).
+      DATABASE_NAME: cinema  # Application DB name.
     depends_on:
+      # Ensures db, valkey, and rabbitmq are healthy before starting the API,
+      # providing robust startup ordering and less brittle failures.
       db:
         condition: service_healthy
       valkey:
@@ -27,68 +32,93 @@ services:
       rabbitmq:
         condition: service_healthy
     healthcheck:
+      # Checks if the API is up by hitting its /health endpoint.
       test: ["CMD", "wget", "-q", "-O-", "http://localhost:8088/health"]
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 30s  # Allows extra boot time for dev environment.
     networks:
-      - cinema_network
+      - cinema_network  # Connects API to the project-level bridge network.
 
+  # -----------------------------------------------------------------------------
+  # valkey: In-memory data store (Valkey is an OSS Redis-compatible server).
+  # Primarily used for caching, session storage, rate limiting, or queues.
+  # -----------------------------------------------------------------------------
   valkey:
-    image: valkey/valkey:9.0.2
-    restart: always
+    image: valkey/valkey:9.0.2  # Pulls Valkey with Redis protocol compatibility.
+    restart: always  # Ensures Valkey restarts if crashed or on host restart.
     ports:
-      - 6379:6379
+      - 6379:6379  # Standard Redis/Valkey port for local development.
     healthcheck:
+      # Checks Valkey is accepting commands by issuing PING.
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 3
     networks:
-      - cinema_network
+      - cinema_network  # Shared bridge network, accessible to API and other services.
 
+  # -----------------------------------------------------------------------------
+  # db: PostgreSQL database service.
+  # Central data store for all persistent backend state (users, reservations, etc).
+  # Data is not persisted outside the container unless a volume is mapped separately.
+  # -----------------------------------------------------------------------------
   db:
-    image: postgres:18.1
-    restart: always
+    image: postgres:18.1  # Specific, up-to-date PostgreSQL version.
+    restart: always  # Ensures DB resilience on host or service restart.
     ports:
-      - 5432:5432
+      - 5432:5432  # Exposes DB for dev access/inspection.
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: cinema
+      POSTGRES_USER: postgres  # DB username (should be secret in production).
+      POSTGRES_PASSWORD: postgres  # DB password (dev only).
+      POSTGRES_DB: cinema  # Initial database to create.
     healthcheck:
+      # Waits for DB to be ready to accept connections.
       test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 10s
     networks:
-      - cinema_network
+      - cinema_network  # Allows backend API to connect to DB by service name.
 
+  # -----------------------------------------------------------------------------
+  # rabbitmq: Message broker service for asynchronous event handling, pub/sub, etc.
+  # Useful for email queues, distributed jobs, microservices, etc.
+  # -----------------------------------------------------------------------------
   rabbitmq:
-    image: rabbitmq:4.2.3
-    restart: always
+    image: rabbitmq:4.2.3  # Using the official RabbitMQ image with the management UI enabled.
+    restart: always  # Auto-restart for resilience.
     ports:
-      - 5672:5672
-      - 15672:15672
+      - 5672:5672    # Standard AMQP port.
+      - 15672:15672  # RabbitMQ management UI.
     environment:
-      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_USER: guest  # Default dev credentials.
       RABBITMQ_DEFAULT_PASS: guest
     volumes:
-      - ../rabbitmq/data:/var/lib/rabbitmq
+      - ../rabbitmq/data:/var/lib/rabbitmq  # Persists message data/broker state for local dev.
     healthcheck:
+      # Ensures RabbitMQ is running and able to respond.
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 10s
       retries: 5
       start_period: 30s
     networks:
-      - cinema_network
+      - cinema_network  # Shared bridge network for inter-service communication.
 
+# -----------------------------------------------------------------------------
+# networks: Defines custom bridge network for all services, ensuring private communication.
+# Keeps services isolated from other containers on the host (except those attached to this network).
+# -----------------------------------------------------------------------------
 networks:
   cinema_network:
-    driver: bridge
+    driver: bridge  # Isolated virtual switch for service-to-service traffic.
 
+# -----------------------------------------------------------------------------
+# volumes: Declare Docker-managed named volumes so node_modules are container-only,
+# avoiding common host/OS file permission problems in Node.js environments.
+# -----------------------------------------------------------------------------
 volumes:
   api_node_modules:

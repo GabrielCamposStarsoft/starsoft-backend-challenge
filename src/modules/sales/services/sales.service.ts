@@ -1,30 +1,47 @@
+/**
+ * @fileoverview Sales domain service.
+ *
+ * Orchestrates create, findAll, findOne. Delegates to use cases.
+ *
+ * @service sales-service
+ */
+
 import { Injectable } from '@nestjs/common';
-import type { IMeta } from 'src/common';
-import { CreateSalesDto, SalesResponseDto, UpdateSalesDto } from '../dto';
+import { CreateSalesDto, SalesResponseDto } from '../dto';
 import type { SaleEntity } from '../entities';
 import {
   CreateSalesUseCase,
-  DeleteSalesUseCase,
   FindAllSalesUseCase,
   FindOneSalesUseCase,
-  UpdateSalesUseCase,
 } from '../use-cases';
+import type { IFindAllSalesResponse } from '../interfaces';
+import type { Optional } from 'src/common';
 
-interface IFindAllSalesResponse {
-  data: Array<SalesResponseDto>;
-  meta: IMeta;
-}
-
+/**
+ * Service for managing sales-related operations.
+ *
+ * @class SalesService
+ */
 @Injectable()
 export class SalesService {
+  /**
+   * Constructs the SalesService.
+   * @param {CreateSalesUseCase} createSalesUseCase - The use case for creating sales.
+   * @param {FindAllSalesUseCase} findAllSalesUseCase - The use case for finding all sales.
+   * @param {FindOneSalesUseCase} findOneSalesUseCase - The use case for finding a sale by ID.
+   */
   constructor(
     private readonly createSalesUseCase: CreateSalesUseCase,
     private readonly findAllSalesUseCase: FindAllSalesUseCase,
     private readonly findOneSalesUseCase: FindOneSalesUseCase,
-    private readonly updateSalesUseCase: UpdateSalesUseCase,
-    private readonly deleteSalesUseCase: DeleteSalesUseCase,
   ) {}
 
+  /**
+   * Creates a new sale.
+   * @param {CreateSalesDto} createDto - The data to create a new sale.
+   * @param {string} userId - The ID of the user creating the sale.
+   * @returns {Promise<SalesResponseDto>} The created sale as a response DTO.
+   */
   public async create(
     createDto: CreateSalesDto,
     userId: string,
@@ -36,10 +53,18 @@ export class SalesService {
     return this.toResponseDto(sale);
   }
 
+  /**
+   * Retrieves all sales (paginated).
+   * @param {Object} options - Options for pagination and filtering.
+   * @param {number} options.page - The current page number.
+   * @param {number} options.limit - Number of items per page.
+   * @param {Optional<string>} [options.userId] - Optional user ID filter.
+   * @returns {Promise<IFindAllSalesResponse>} The paginated sales data and meta information.
+   */
   public async findAll(options: {
     page: number;
     limit: number;
-    userId?: string;
+    userId?: Optional<string>;
   }): Promise<IFindAllSalesResponse> {
     const [items, total]: [Array<SaleEntity>, number] =
       await this.findAllSalesUseCase.execute(options);
@@ -55,23 +80,25 @@ export class SalesService {
     };
   }
 
-  public async findOne(id: string): Promise<SalesResponseDto> {
-    const sale: SaleEntity = await this.findOneSalesUseCase.execute({ id });
+  /**
+   * Finds a single sale by ID.
+   * @param {string} id - The ID of the sale to retrieve.
+   * @returns {Promise<SalesResponseDto>} The sale as a response DTO.
+   */
+  public async findOne(id: string, userId: string): Promise<SalesResponseDto> {
+    const sale: SaleEntity = await this.findOneSalesUseCase.execute({
+      id,
+      userId,
+    });
     return this.toResponseDto(sale);
   }
 
-  public async update(
-    id: string,
-    updateDto: UpdateSalesDto,
-  ): Promise<SalesResponseDto> {
-    const sale = await this.updateSalesUseCase.execute(id, updateDto);
-    return this.toResponseDto(sale);
-  }
-
-  public async remove(id: string): Promise<void> {
-    await this.deleteSalesUseCase.execute({ id });
-  }
-
+  /**
+   * Converts a SaleEntity to a SalesResponseDto.
+   * @private
+   * @param {SaleEntity} sale - The sale entity to map.
+   * @returns {SalesResponseDto} The corresponding response DTO.
+   */
   private toResponseDto(sale: SaleEntity): SalesResponseDto {
     return {
       id: sale.id,

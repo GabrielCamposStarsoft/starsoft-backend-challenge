@@ -1,11 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CreateSessionsDto } from '../dto/create-sessions.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { IUseCase } from 'src/common';
 import { Repository } from 'typeorm';
 import { SessionEntity } from '../entities';
+import type { ICreateSessionsInput } from './interfaces';
 
 @Injectable()
-export class CreateSessionsUseCase {
+export class CreateSessionsUseCase implements IUseCase<
+  ICreateSessionsInput,
+  SessionEntity
+> {
   private readonly logger: Logger = new Logger(CreateSessionsUseCase.name);
 
   constructor(
@@ -13,17 +17,17 @@ export class CreateSessionsUseCase {
     private readonly sessionsRepository: Repository<SessionEntity>,
   ) {}
 
-  public async execute(createDto: CreateSessionsDto): Promise<SessionEntity> {
+  public async execute(input: ICreateSessionsInput): Promise<SessionEntity> {
     const session: SessionEntity = this.sessionsRepository.create({
-      movieTitle: createDto.movieTitle,
-      roomName: createDto.roomName,
-      startTime: new Date(createDto.startTime),
-      endTime: new Date(createDto.endTime),
-      ticketPrice: createDto.ticketPrice,
+      movieTitle: input.movieTitle,
+      roomName: input.roomName,
+      startTime: new Date(input.startTime),
+      endTime: new Date(input.endTime),
+      ticketPrice: input.ticketPrice,
     });
-    const saved = await this.sessionsRepository.save(session);
+    const saved: SessionEntity = await this.sessionsRepository.save(session);
 
-    this.logger.log(`Session ${saved.id} created: ${createDto.movieTitle}`);
+    this.logger.log(`Session ${saved.id} created: ${input.movieTitle}`);
 
     return saved;
   }

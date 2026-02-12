@@ -1,4 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
+/**
+ * @fileoverview DTO for user registration.
+ *
+ * @dto register
+ */
+import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
@@ -7,13 +12,54 @@ import {
   IsStrongPassword,
 } from 'class-validator';
 
+/**
+ * DTO for user registration.
+ *
+ * @description
+ * Contains the required fields for account creation: email and password.
+ * Password must have at least 8 characters, 1 number, 1 symbol, 1 uppercase and 1 lowercase.
+ * Used in endpoint POST /auth/register.
+ *
+ * @example
+ * ```json
+ * {
+ *   "email": "user@example.com",
+ *   "password": "Str0ngP@ss"
+ * }
+ * ```
+ *
+ * @see AuthController.register
+ * @see AuthService.register
+ */
+@ApiExtraModels(RegisterDto)
 export class RegisterDto {
-  @ApiProperty({ description: 'User email', example: 'user@example.com' })
+  /**
+   * User email (unique in the system).
+   *
+   * @example 'user@example.com'
+   */
+  @ApiProperty({
+    description: 'User email (must be unique)',
+    example: 'user@example.com',
+    format: 'email',
+    required: true,
+  })
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ description: 'User password', example: 'Str0ngP@ss' })
+  /**
+   * Password with security requirements.
+   *
+   * @example 'Str0ngP@ss'
+   */
+  @ApiProperty({
+    description:
+      'Password (min. 8 characters, 1 number, 1 symbol, 1 uppercase, 1 lowercase)',
+    example: 'Str0ngP@ss',
+    minLength: 8,
+    required: true,
+  })
   @IsString()
   @IsNotEmpty()
   @MinLength(8, { message: 'Password must be at least 8 characters' })

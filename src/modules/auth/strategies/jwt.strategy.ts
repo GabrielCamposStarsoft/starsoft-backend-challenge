@@ -1,18 +1,35 @@
+/**
+ * @fileoverview Passport JWT access token strategy.
+ *
+ * Validates Bearer token, loads user by sub claim, attaches IRequestUser to request.
+ * Used by JwtAuthGuard. Rejects tokens with type !== 'access'.
+ *
+ * @strategy jwt-strategy
+ */
+
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import type { StrategyOptions } from 'passport-jwt';
+import { ExtractJwt, Strategy, type StrategyOptions } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import type { IJwtAccessPayload } from '../interfaces';
-import type { IRequestUser } from '../interfaces';
 import { AuthService } from '../services/auth.service';
-import { AUTH_ENV_KEYS } from '../constants/auth.constants';
-import type { UserEntity } from '../../users/entities/user.entity';
-import { Optional } from 'src/common';
+import { AUTH_ENV_KEYS } from '../constants';
+import type { UserEntity } from '../../users/entities';
+import type { Optional, IRequestUser, Nullable } from 'src/common';
 
+/**
+ * Validates JWT access tokens and resolves user for request.
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+  /**
+   * Configures strategy with JWT secret and Bearer extraction.
+   *
+   * @param configService - For JWT_SECRET
+   * @param authService - For getUserById and getRequestUser
+   * @param i18n - For error messages
+   */
   constructor(
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
@@ -42,7 +59,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         this.i18n.t('common.auth.invalidTokenType'),
       );
     }
-    const user: UserEntity | null = await this.authService.getUserById(
+    const user: Nullable<UserEntity> = await this.authService.getUserById(
       payload.sub,
     );
     if (!user) {

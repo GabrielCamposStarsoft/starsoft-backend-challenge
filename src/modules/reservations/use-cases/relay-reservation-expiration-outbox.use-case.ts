@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Use case for relaying reservation expiration outbox events to the messaging broker.
+ *
+ * @usecase relay-reservation-expiration-outbox-use-case
+ */
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,7 +16,7 @@ export class RelayReservationExpirationOutboxUseCase implements IUseCase<
   void,
   number
 > {
-  private readonly logger = new Logger(
+  private readonly logger: Logger = new Logger(
     RelayReservationExpirationOutboxUseCase.name,
   );
 
@@ -36,16 +41,20 @@ export class RelayReservationExpirationOutboxUseCase implements IUseCase<
 
     for (const row of pending) {
       try {
-        await this.messagingProducer.publishReservationExpired({
-          reservationId: row.reservationId,
-          seatId: row.seatId,
-          sessionId: row.sessionId,
-        });
-        if (row.seatReleased) {
-          await this.messagingProducer.publishSeatReleased({
+        const reason: string = row.reason ?? 'expired';
+        if (reason === 'expired') {
+          await this.messagingProducer.publishReservationExpired({
+            reservationId: row.reservationId,
             seatId: row.seatId,
             sessionId: row.sessionId,
-            reason: 'expired',
+          });
+        }
+        if (row.seatReleased) {
+          await this.messagingProducer.publishSeatReleased({
+            reservationId: row.reservationId,
+            seatId: row.seatId,
+            sessionId: row.sessionId,
+            reason: reason as 'expired' | 'cancelled',
           });
         }
         await this.expirationOutboxRepository.update(

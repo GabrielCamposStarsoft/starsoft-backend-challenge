@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Authentication module.
+ *
+ * Provides registration, login, refresh, logout, and JWT access/refresh flows.
+ * Uses Passport JWT strategy and refresh token guard. Exports AuthService and JwtAuthGuard.
+ *
+ * @module auth
+ */
+
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -6,19 +15,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouterModule } from '@nestjs/core';
 import { UserEntity } from '../users/entities';
 import { UsersModule } from '../users/users.module';
-import { AuthController } from './controllers/auth.controller';
-import { AuthService } from './services/auth.service';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { AuthController } from './controllers';
+import { AuthService } from './services';
+import { JwtStrategy } from './strategies';
+import { JwtRefreshGuard } from './guards';
 import { RefreshTokenEntity } from './entities';
 import { AuthUseCases } from './use-cases';
-import {
-  AUTH_ENV_KEYS,
-  DEFAULT_JWT_ACCESS_EXPIRATION,
-} from './constants/auth.constants';
+import { AUTH_DEFAULTS, AUTH_ENV_KEYS } from './constants';
 import type { JwtModuleOptions } from '@nestjs/jwt';
-
+import { JwtAuthGuard } from 'src/common';
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserEntity, RefreshTokenEntity]),
@@ -29,8 +34,8 @@ import type { JwtModuleOptions } from '@nestjs/jwt';
         const expiresInStr =
           configService.get<string>(
             AUTH_ENV_KEYS.JWT_ACCESS_EXPIRATION,
-            DEFAULT_JWT_ACCESS_EXPIRATION,
-          ) ?? DEFAULT_JWT_ACCESS_EXPIRATION;
+            AUTH_DEFAULTS.JWT_ACCESS_EXPIRATION,
+          ) ?? AUTH_DEFAULTS.JWT_ACCESS_EXPIRATION;
         return {
           secret: configService.get<string>(AUTH_ENV_KEYS.JWT_SECRET),
           signOptions: { expiresIn: expiresInStr },

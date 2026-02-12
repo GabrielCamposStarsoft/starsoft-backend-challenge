@@ -1,62 +1,112 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
+/**
+ * @fileoverview Query DTO for listing reservations with pagination and filters.
+ *
+ * @dto find-all-reservations
+ */
+import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsIn, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ReservationStatus } from '../enums';
+import type { Optional } from 'src/common';
 
 /**
- * DTO for finding all reservations with optional filters.
+ * Query DTO for listing reservations with optional pagination and filters.
+ *
+ * @description
+ * Used in endpoint GET /reservations. userId is injected by the controller from the JWT.
+ *
+ * @example
+ * ```json
+ * { "page": 1, "limit": 10, "sessionId": "...", "status": "pending" }
+ * ```
+ *
+ * @see ReservationsController.findAll
+ * @see ReservationsService.findAll
  */
+@ApiExtraModels(FindAllReservationsDto)
 export class FindAllReservationsDto {
   /**
-   * Page number.
+   * Page number (1-based). Default: 1
+   *
    * @type {number}
+   * @memberof FindAllReservationsDto
    * @example 1
    */
-  @ApiProperty({ description: 'Page number', example: 1 })
-  @IsNumber()
+  @ApiPropertyOptional({
+    description: 'Page number (1-based). Default: 1',
+    example: 1,
+    minimum: 1,
+  })
   @IsOptional()
-  page: number;
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  page?: Optional<number>;
 
   /**
-   * Number of records per page.
+   * Number of items per page. Default: 10
+   *
    * @type {number}
+   * @memberof FindAllReservationsDto
+   * @example 10
    */
+  @ApiPropertyOptional({
+    description: 'Number of items per page. Default: 10',
+    example: 10,
+    minimum: 1,
+  })
+  @IsOptional()
+  @Type(() => Number)
   @IsNumber()
-  @IsOptional()
-  limit: number;
+  @Min(1)
+  limit?: Optional<number>;
 
   /**
-   * User ID to filter reservations.
+   * Filter by user UUID
+   *
    * @type {string}
-   * @example '123e4567-e89b-12d3-a456-426614174000'
+   * @memberof FindAllReservationsDto
+   * @example "123e4567-e89b-12d3-a456-426614174000"
    */
-  @ApiProperty({
-    description: 'User ID',
+  @ApiPropertyOptional({
+    description: 'Filter by user UUID',
     example: '123e4567-e89b-12d3-a456-426614174000',
+    format: 'uuid',
   })
   @IsUUID()
   @IsOptional()
-  userId?: string;
+  userId?: Optional<string>;
 
   /**
-   * Session ID to filter reservations.
+   * Filter by session UUID
+   *
    * @type {string}
-   * @example '123e4567-e89b-12d3-a456-426614174000'
+   * @memberof FindAllReservationsDto
+   * @example "123e4567-e89b-12d3-a456-426614174000"
    */
-  @ApiProperty({
-    description: 'Session ID',
+  @ApiPropertyOptional({
+    description: 'Filter by session UUID',
     example: '123e4567-e89b-12d3-a456-426614174000',
+    format: 'uuid',
   })
   @IsUUID()
   @IsOptional()
-  sessionId?: string;
+  sessionId?: Optional<string>;
 
   /**
-   * Reservation status to filter by.
-   * @type {string}
-   * @example 'pending'
+   * Filter by reservation status.
+   * Must be one of ReservationStatus values (e.g. "PENDING", "CONFIRMED", etc).
+   *
+   * @type {ReservationStatus}
+   * @memberof FindAllReservationsDto
+   * @example ReservationStatus.PENDING
    */
-  @ApiProperty({ description: 'Status', example: 'pending' })
-  @IsString()
+  @ApiPropertyOptional({
+    description: 'Filter by reservation status',
+    enum: ReservationStatus,
+    example: ReservationStatus.PENDING,
+  })
+  @IsOptional()
   @IsIn(Object.values(ReservationStatus))
-  status?: ReservationStatus;
+  status?: Optional<ReservationStatus>;
 }

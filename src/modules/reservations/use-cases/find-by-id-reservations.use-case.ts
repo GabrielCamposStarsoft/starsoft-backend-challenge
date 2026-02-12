@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Use case for finding a reservation by ID.
+ *
+ * @usecase find-by-id-reservations-use-case
+ */
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -21,9 +26,9 @@ export class FindByIdReservationUseCase implements IUseCase<
   public async execute(
     input: IFindByIdReservationInput,
   ): Promise<ReservationEntity> {
-    const { id }: IFindByIdReservationInput = input;
+    const { id, userId }: IFindByIdReservationInput = input;
     const reservation = await this.reservationsRepository.findOne({
-      where: { id },
+      where: { id, userId },
     });
     if (!reservation) {
       this.logger.error(`Reservation not found with id: ${id}`);

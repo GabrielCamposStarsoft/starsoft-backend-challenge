@@ -14,7 +14,10 @@
       "Bash(grep:*)",
       "Bash(git -C /home/gabrielcampos/Desktop/starsoft-backend-challenge rm:*)",
       "Bash(xargs:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(pnpm build:*)",
+      "Bash(npx jest:*)",
+      "Bash(done)"
     ]
   }
 }

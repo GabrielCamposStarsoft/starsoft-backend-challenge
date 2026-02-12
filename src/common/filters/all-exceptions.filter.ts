@@ -1,40 +1,51 @@
+/**
+ * @fileoverview Global exception filter for HTTP errors.
+ *
+ * Catches all unhandled exceptions and formats a consistent JSON error response
+ * (statusCode, timestamp, path, message, error). HttpException status/message
+ * are preserved; unknown errors return 500.
+ *
+ * @filter all-exceptions
+ */
+
 import {
   ArgumentsHost,
+  Catch,
   ExceptionFilter,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Catch, Logger } from '@nestjs/common';
-import { EitherMultiple } from '../types';
-import type { FastifyReply, FastifyRequest } from 'fastify'; // import do tipo correto
-
-interface HttpErrorResponse {
-  statusCode: number;
-  timestamp: string;
-  path: string;
-  message: string | string[];
-  error?: string;
-}
+import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { Either, Optional } from '../types';
+import type { IHttpErrorResponse } from '../interfaces';
+import type { HttpArgumentsHost } from '@nestjs/common/interfaces';
 
 /**
- * Filter that catches all exceptions and handles them appropriately.
+ * Catches all exceptions and returns a normalized HTTP error response.
  *
- * @template TException - The type of the exception to be caught.
- * @implements {ExceptionFilter<TException>}
+ * @description For HttpException, extracts status and message. For others,
+ * uses 500 and exception message. Message can be string or string[].
+ *
+ * @template TException - Error or HttpException
+ * @implements ExceptionFilter
  */
 @Catch()
 export class AllExceptionsFilter<
-  TException extends EitherMultiple<[Error, HttpException]>,
+  TException extends Either<Error, HttpException>,
 > implements ExceptionFilter<TException> {
-  private readonly logger = new Logger(AllExceptionsFilter.name);
-
-  catch(exception: TException, host: ArgumentsHost): void {
+  /**
+   * Handles the exception and sends formatted error response.
+   *
+   * @param exception - The thrown error
+   * @param host - Nest arguments host (HTTP context)
+   */
+  public catch(exception: TException, host: ArgumentsHost): void {
     const contextType: 'http' = host.getType<'http'>();
 
     switch (contextType) {
       case 'http': {
-        const ctx = host.switchToHttp();
-        const response: FastifyReply = ctx.getResponse<FastifyReply>(); // <-- aqui
+        const ctx: HttpArgumentsHost = host.switchToHttp();
+        const response: FastifyReply = ctx.getResponse<FastifyReply>();
         const request: FastifyRequest = ctx.getRequest<FastifyRequest>();
 
         const status: number =
@@ -42,12 +53,12 @@ export class AllExceptionsFilter<
             ? exception.getStatus()
             : HttpStatus.INTERNAL_SERVER_ERROR;
 
-        const message: string | string[] =
-          exception instanceof HttpException
-            ? this.extractHttpMessage(exception)
-            : exception.message;
+        const message: Either<string, Array<string>> = exception instanceof
+        HttpException
+          ? this.extractHttpMessage(exception)
+          : exception.message;
 
-        const errorResponse: HttpErrorResponse = {
+        const errorResponse: IHttpErrorResponse = {
           statusCode: status,
           timestamp: new Date().toISOString(),
           path: request.url,
@@ -56,7 +67,7 @@ export class AllExceptionsFilter<
             exception instanceof HttpException
               ? ((exception.getResponse() as Record<string, unknown>)?.[
                   'error'
-                ] as string | undefined)
+                ] as Optional<string>)
               : undefined,
         };
 
@@ -66,8 +77,17 @@ export class AllExceptionsFilter<
     }
   }
 
-  private extractHttpMessage(exception: HttpException): string | string[] {
-    const res = exception.getResponse();
+  /**
+   * Extracts message from HttpException response.
+   *
+   * @param exception - HttpException instance
+   * @returns String or array of validation messages
+   * @internal
+   */
+  private extractHttpMessage(
+    exception: HttpException,
+  ): Either<string, Array<string>> {
+    const res: Either<string, object> = exception.getResponse();
     if (typeof res === 'string') return res;
     if (typeof res === 'object' && res !== null)
       return (

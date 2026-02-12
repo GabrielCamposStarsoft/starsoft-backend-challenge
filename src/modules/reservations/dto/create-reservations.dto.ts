@@ -1,43 +1,81 @@
 /**
- * DTO for creating multiple reservations in a single request.
+ * @fileoverview DTO for creating seat reservations in a session.
  *
- * This DTO is used to specify the required information for reserving multiple seats in a session
- * for a particular user. Includes the session ID, user ID, and an array of seat IDs.
- *
- * @class CreateReservationsDto
- * @property {string} sessionId - The ID of the session in which the seats are being reserved.
- * @property {string[]} seatIds - An array of seat UUIDs to reserve in the session.
- * @property {string} userId - The ID of the user making the reservation(s).
+ * @dto create-reservations
  */
-import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsUUID } from 'class-validator';
+import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsNotEmpty,
+  IsUUID,
+} from 'class-validator';
 
+/**
+ * DTO for creating a reservation of one or more seats in a session.
+ *
+ * @description
+ * Contains sessionId and array of seatIds. UserId is extracted from the authenticated JWT.
+ * Used in endpoint POST /reservations.
+ *
+ * @example
+ * ```json
+ * {
+ *   "sessionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+ *   "seatIds": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890", "b2c3d4e5-f6a7-8901-bcde-f12345678901"]
+ * }
+ * ```
+ *
+ * @see ReservationsController.create
+ * @see ReservationsService.create
+ */
+@ApiExtraModels(CreateReservationsDto)
 export class CreateReservationsDto {
   /**
-   * The ID of the session in which the seats are being reserved.
-   * @type {string}
-   * @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   * UUID of the session in which seats will be reserved.
+   *
+   * @example 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
    */
   @ApiProperty({
-    description: 'Session ID',
+    description:
+      'Unique identifier (UUID) of the session in which seats are to be reserved.',
     example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    format: 'uuid',
+    required: true,
   })
-  @IsUUID()
-  @IsNotEmpty()
+  @IsUUID('4', { message: 'sessionId must be a valid UUID v4' })
+  @IsNotEmpty({ message: 'sessionId must not be empty' })
   sessionId: string;
 
   /**
-   * An array of UUIDs, each representing a seat to reserve in the session.
-   * @type {string[]}
-   * @example ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
+   * Array of seat UUIDs to reserve in the session. Between 1 and 20 items.
+   *
+   * @example ['a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'b2c3d4e5-f6a7-8901-bcde-f12345678901']
    */
   @ApiProperty({
-    description: 'Array of seat IDs to reserve',
-    example: ['a1b2c3d4-e5f6-7890-abcd-ef1234567890'],
-    type: [String],
+    description:
+      'Array of unique seat UUIDs to reserve within the session. 1-20 items allowed.',
+    example: [
+      'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+      'b2c3d4e5-f6a7-8901-bcde-f12345678901',
+    ],
+    type: String,
+    isArray: true,
+    minItems: 1,
+    maxItems: 20,
+    required: true,
+    uniqueItems: true,
   })
-  @IsArray()
-  @IsUUID('4', { each: true })
-  @IsNotEmpty()
-  seatIds: string[];
+  @IsArray({ message: 'seatIds must be an array of UUID strings' })
+  @ArrayMinSize(1, {
+    message:
+      'At least one seat must be selected (seatIds must have at least 1 item)',
+  })
+  @ArrayMaxSize(20, {
+    message: 'Cannot reserve more than 20 seats in a single request',
+  })
+  @IsUUID('4', { each: true, message: 'Each seatId must be a valid UUID v4' })
+  @IsNotEmpty({ message: 'seatIds array must not be empty' })
+  seatIds: Array<string>;
 }

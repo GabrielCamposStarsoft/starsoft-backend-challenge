@@ -1,14 +1,19 @@
+/**
+ * @fileoverview HTTP request contract with optional user.
+ *
+ * Generic shape for guards and interceptors that access request.user.
+ *
+ * @interface request
+ */
+
 import type { Optional } from '../types';
 
 /**
- * The contract for an HTTP request in the application,
- * which may optionally include an authenticated user.
+ * HTTP request with optional authenticated user.
  *
- * @template User - The type of the authenticated user object, if any.
+ * @template User - Type of user object when authenticated
  */
-export interface IRequest<User> {
-  /**
-   * Optionally contains the authenticated user associated with the request.
-   */
+export interface IRequest<User = unknown> {
+  /** Authenticated user, set by auth guard when JWT is valid. */
   user?: Optional<User>;
 }

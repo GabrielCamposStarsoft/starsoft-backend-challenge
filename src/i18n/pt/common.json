@@ -11,6 +11,7 @@
     "conflict": "Recurso já existe",
     "unauthorized": "Credenciais inválidas",
     "forbidden": "Acesso negado",
+    "insufficientRole": "Permissões insuficientes. Role necessária: {roles}",
     "badRequest": "Requisição inválida"
   },
   "auth": {
@@ -28,7 +29,8 @@
     "notPending": "Reserva {id} não está pendente",
     "expired": "Reserva {id} expirou",
     "cannotDeleteConfirmed": "Não é possível excluir uma reserva confirmada (já vendida)",
-    "invalidTransition": "Não é possível transicionar de '{from}' para '{to}'"
+    "invalidTransition": "Não é possível transicionar de '{from}' para '{to}'",
+    "ownOnly": "Você só pode modificar suas próprias reservas"
   },
   "sale": {
     "notFound": "Venda {id} não encontrada",
@@ -37,13 +39,16 @@
   "seat": {
     "notFound": "Assento não encontrado",
     "notAvailable": "Assento {id} não está disponível",
+    "notInSession": "O assento {id} não pertence a esta sessão",
     "alreadySold": "Assento já vendido",
-    "sold": "Assento está vendido"
+    "sold": "Assento está vendido",
+    "notReservedForSale": "O assento deve estar reservado para confirmar o pagamento"
   },
   "session": {
     "notFound": "Sessão não encontrada",
     "notFoundWithId": "Sessão {id} não encontrada",
-    "finished": "Sessão encerrada"
+    "finished": "Sessão encerrada",
+    "notActive": "Não é possível reservar assentos para uma sessão que não está ativa"
   },
   "user": {
     "notFound": "Usuário {id} não encontrado",

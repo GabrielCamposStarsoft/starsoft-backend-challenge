@@ -1,68 +1,122 @@
-import { ApiProperty } from '@nestjs/swagger';
+/**
+ * @fileoverview Response DTO for a reservation.
+ *
+ * @dto reservations-response
+ */
+import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
 import { ReservationStatus } from '../enums';
 
 /**
- * DTO representing the response structure for a reservation.
+ * Response DTO representing a reservation.
  *
- * @class ReservationsResponseDto
- * @property {string} id - Unique identifier for the reservation.
- * @property {string} sessionId - ID of the session to which the reservation belongs.
- * @property {string} seatId - ID of the seat reserved.
- * @property {string} userId - ID of the user who made the reservation.
- * @property {ReservationStatus} status - Current status of the reservation.
- * @property {Date} expiresAt - Timestamp when the reservation expires.
- * @property {Date} createdAt - Timestamp when the reservation was created.
- * @property {Date} updatedAt - Timestamp of the last reservation update.
+ * @description
+ * Returned in GET /reservations, GET /reservations/:id and POST /reservations.
+ *
+ * @see ReservationsController
+ * @see ReservationsService
  */
+@ApiExtraModels(ReservationsResponseDto)
 export class ReservationsResponseDto {
   /**
-   * Unique identifier for the reservation.
+   * Reservation unique identifier
+   * @type {string}
+   * @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   * @format uuid
    */
-  @ApiProperty({ description: 'Unique identifier' })
+  @ApiProperty({
+    description: 'Reservation unique identifier',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    format: 'uuid',
+  })
   id: string;
 
   /**
-   * ID of the session to which the reservation belongs.
+   * UUID of the session associated with this reservation.
+   * @type {string}
+   * @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   * @format uuid
    */
-  @ApiProperty({ description: 'Session ID' })
+  @ApiProperty({
+    description: 'Session UUID',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    format: 'uuid',
+  })
   sessionId: string;
 
   /**
-   * ID of the seat reserved.
+   * UUID of the seat reserved.
+   * @type {string}
+   * @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   * @format uuid
    */
-  @ApiProperty({ description: 'Seat ID' })
+  @ApiProperty({
+    description: 'Seat UUID',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    format: 'uuid',
+  })
   seatId: string;
 
   /**
-   * ID of the user who made the reservation.
+   * UUID of the user who made the reservation.
+   * @type {string}
+   * @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+   * @format uuid
    */
-  @ApiProperty({ description: 'User ID' })
+  @ApiProperty({
+    description: 'User UUID who made the reservation',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    format: 'uuid',
+  })
   userId: string;
 
   /**
-   * Current status of the reservation.
+   * Status of the reservation.
+   * @type {ReservationStatus}
+   * @example ReservationStatus.PENDING
    */
   @ApiProperty({
     description: 'Reservation status',
     enum: ReservationStatus,
+    example: ReservationStatus.PENDING,
   })
   status: ReservationStatus;
 
   /**
-   * Timestamp when the reservation expires.
+   * Expiration timestamp (ISO 8601 string) for the reservation.
+   * @type {Date}
+   * @example "2026-02-10T15:00:00.000Z"
+   * @format date-time
    */
-  @ApiProperty({ description: 'Reservation expiration timestamp' })
+  @ApiProperty({
+    description: 'Expiration timestamp (ISO 8601)',
+    example: '2026-02-10T15:00:00.000Z',
+    format: 'date-time',
+  })
   expiresAt: Date;
 
   /**
-   * Timestamp when the reservation was created.
+   * Date and time when the reservation was created (ISO 8601 string).
+   * @type {Date}
+   * @example "2026-02-10T14:30:00.000Z"
+   * @format date-time
    */
-  @ApiProperty({ description: 'Creation date' })
+  @ApiProperty({
+    description: 'Creation date (ISO 8601)',
+    example: '2026-02-10T14:30:00.000Z',
+    format: 'date-time',
+  })
   createdAt: Date;
 
   /**
-   * Timestamp of the last reservation update.
+   * Date and time when the reservation was last updated (ISO 8601 string).
+   * @type {Date}
+   * @example "2026-02-10T14:30:00.000Z"
+   * @format date-time
    */
-  @ApiProperty({ description: 'Last update date' })
+  @ApiProperty({
+    description: 'Last update date (ISO 8601)',
+    example: '2026-02-10T14:30:00.000Z',
+    format: 'date-time',
+  })
   updatedAt: Date;
 }

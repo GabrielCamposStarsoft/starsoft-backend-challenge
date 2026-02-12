@@ -1,23 +1,24 @@
-import { Injectable } from '@nestjs/common';
-import { CreateSessionsUseCase } from '../use-cases/create-sessions.use-case';
-import { FindAllSessionsUseCase } from '../use-cases/find-all-sessions.use-case';
-import { FindSessionByIdUseCase } from '../use-cases/find-one-sessions.use-case';
-import { UpdateSessionsUseCase } from '../use-cases/update-sessions.use-case';
-import { DeleteSessionsUseCase } from '../use-cases/delete-sessions.use-case';
-import {
-  GetAvailabilityUseCase,
-  type IAvailabilityResponse,
-} from '../use-cases/get-availability.use-case';
-import { CreateSessionsDto } from '../dto/create-sessions.dto';
-import { UpdateSessionsDto } from '../dto/update-sessions.dto';
-import { SessionsResponseDto } from '../dto/sessions-response.dto';
-import { SessionEntity } from '../entities';
-import { IMeta } from 'src/common';
+/**
+ * @fileoverview Session domain service.
+ *
+ * Delegates to use cases for creation, listing, find-by-id, and availability.
+ *
+ * @service sessions-service
+ */
 
-interface ISessionsResponse {
-  data: SessionsResponseDto[];
-  meta: IMeta;
-}
+import { Injectable } from '@nestjs/common';
+import {
+  CreateSessionsUseCase,
+  FindAllSessionsUseCase,
+  FindSessionByIdUseCase,
+  GetAvailabilityUseCase,
+} from '../use-cases';
+import { CreateSessionsDto, SessionsResponseDto } from '../dto';
+import type { SessionEntity } from '../entities';
+import type {
+  IAvailabilityResponse,
+  ISessionsFindAllResponse,
+} from '../interfaces';
 
 @Injectable()
 export class SessionsService {
@@ -25,23 +26,26 @@ export class SessionsService {
     private readonly createSessionsUseCase: CreateSessionsUseCase,
     private readonly findAllSessionsUseCase: FindAllSessionsUseCase,
     private readonly findSessionByIdUseCase: FindSessionByIdUseCase,
-    private readonly updateSessionsUseCase: UpdateSessionsUseCase,
-    private readonly deleteSessionsUseCase: DeleteSessionsUseCase,
     private readonly getAvailabilityUseCase: GetAvailabilityUseCase,
   ) {}
 
   public async create(
     createDto: CreateSessionsDto,
   ): Promise<SessionsResponseDto> {
-    const session: SessionEntity =
-      await this.createSessionsUseCase.execute(createDto);
+    const session: SessionEntity = await this.createSessionsUseCase.execute({
+      movieTitle: createDto.movieTitle,
+      roomName: createDto.roomName,
+      startTime: new Date(createDto.startTime),
+      endTime: new Date(createDto.endTime),
+      ticketPrice: createDto.ticketPrice,
+    });
     return this.toResponseDto(session);
   }
 
   public async findAll(options: {
     page: number;
     limit: number;
-  }): Promise<ISessionsResponse> {
+  }): Promise<ISessionsFindAllResponse> {
     const [items, total]: [Array<SessionEntity>, number] =
       await this.findAllSessionsUseCase.execute(options);
 
@@ -57,24 +61,10 @@ export class SessionsService {
   }
 
   public async findOne(id: string): Promise<SessionsResponseDto> {
-    const session: SessionEntity =
-      await this.findSessionByIdUseCase.execute(id);
-    return this.toResponseDto(session);
-  }
-
-  public async update(
-    id: string,
-    updateDto: UpdateSessionsDto,
-  ): Promise<SessionsResponseDto> {
-    const session: SessionEntity = await this.updateSessionsUseCase.execute(
+    const session: SessionEntity = await this.findSessionByIdUseCase.execute({
       id,
-      updateDto,
-    );
+    });
     return this.toResponseDto(session);
-  }
-
-  public async remove(id: string): Promise<void> {
-    await this.deleteSessionsUseCase.execute(id);
   }
 
   private toResponseDto(session: SessionEntity): SessionsResponseDto {
@@ -92,6 +82,6 @@ export class SessionsService {
   }
 
   public async getAvailability(id: string): Promise<IAvailabilityResponse> {
-    return await this.getAvailabilityUseCase.execute(id);
+    return await this.getAvailabilityUseCase.execute({ sessionId: id });
   }
 }

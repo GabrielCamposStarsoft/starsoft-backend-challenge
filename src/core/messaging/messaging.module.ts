@@ -1,14 +1,19 @@
+/**
+ * @fileoverview RabbitMQ messaging module.
+ *
+ * Registers RabbitMQ client, consumer controller, producer, and DLQ setup.
+ * Exports MessagingProducer for publishing domain events from feature modules.
+ *
+ * @module messaging
+ */
+
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { RMQServices } from '../../common';
-import {
-  RMQ_QUEUE,
-  RMQ_DLX,
-  RMQ_DLQ,
-} from '../../common/constants/events.constants';
+import { RMQ_QUEUE, RMQ_DLX, RMQ_DLQ } from 'src/common';
 import { MessagingProducer } from './producers';
 import { MessagingConsumer } from './consumers';
-import { DlqSetupService } from './services/dlq-setup.service';
+import { DlqSetupService } from './services';
 
 @Module({
   imports: [
@@ -30,7 +35,14 @@ import { DlqSetupService } from './services/dlq-setup.service';
       },
     ]),
   ],
-  providers: [MessagingProducer, MessagingConsumer, DlqSetupService],
+  controllers: [MessagingConsumer],
+  providers: [MessagingProducer, DlqSetupService],
   exports: [MessagingProducer],
 })
+/**
+ * Nest module for RabbitMQ messaging.
+ *
+ * @description Configures durable queue with DLX/DLQ. MessagingConsumer
+ * handles incoming events; MessagingProducer publishes to the queue.
+ */
 export class MessagingModule {}

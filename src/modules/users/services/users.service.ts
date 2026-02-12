@@ -1,89 +1,70 @@
+/**
+ * @fileoverview User domain service.
+ *
+ * Delegate for user creation and lookup by email. Used by auth module.
+ *
+ * @service users-service
+ */
+
 import { Injectable } from '@nestjs/common';
-import { CreateUsersDto } from '../dto/create-users.dto';
-import { UpdateUsersDto } from '../dto/update-users.dto';
-import { UsersResponseDto } from '../dto/users-response.dto';
+import { CreateUsersDto, UsersResponseDto } from '../dto';
 import { UserEntity } from '../entities';
-import {
-  CreateUsersUseCase,
-  FindUserByIdUseCase,
-  UpdateUsersUseCase,
-  DeleteUsersUseCase,
-} from '../use-cases';
-import {
-  FindAllUsersUseCase,
-  type IFindAllUsersInput,
-} from '../use-cases/find-all-users.use-case';
-import { FindUserByEmailUseCase } from '../use-cases/find-user-by-email.use-case';
-import type { IMeta } from 'src/common';
+import { FindUserByEmailUseCase, CreateUsersUseCase } from '../use-cases';
 import type { Nullable } from 'src/common';
 
-export interface IFindAllUsersResponse {
-  data: Array<UsersResponseDto>;
-  meta: IMeta;
-}
-
+/**
+ * Handles user creation and lookup.
+ *
+ * @description Delegates to use cases. No direct repository access.
+ */
 @Injectable()
 export class UsersService {
+  /**
+   * Constructs the UsersService.
+   * @param createUsersUseCase Use-case for creating new users.
+   * @param findUserByEmailUseCase Use-case for finding a user by email.
+   */
   constructor(
     private readonly createUsersUseCase: CreateUsersUseCase,
-    private readonly findAllUsersUseCase: FindAllUsersUseCase,
-    private readonly findUserByIdUseCase: FindUserByIdUseCase,
     private readonly findUserByEmailUseCase: FindUserByEmailUseCase,
-    private readonly updateUsersUseCase: UpdateUsersUseCase,
-    private readonly deleteUsersUseCase: DeleteUsersUseCase,
   ) {}
 
+  /**
+   * Finds and returns a user entity by email.
+   * @param email The email address of the user to search for.
+   * @returns A user entity if found, otherwise null.
+   */
   public async findByEmail(email: string): Promise<Nullable<UserEntity>> {
-    return this.findUserByEmailUseCase.execute(email);
+    return this.findUserByEmailUseCase.execute({ email });
   }
 
+  /**
+   * Creates a new user with the provided data transfer object.
+   * @param createDto The DTO containing user creation data.
+   * @returns A UsersResponseDto with the created user's information.
+   */
   public async create(createDto: CreateUsersDto): Promise<UsersResponseDto> {
-    const user: UserEntity = await this.createUsersUseCase.execute(createDto);
+    const user: UserEntity = await this.createUsersUseCase.execute({
+      username: createDto.username,
+      email: createDto.email,
+      password: createDto.password,
+      role: createDto.role,
+    });
+
     return this.toResponseDto(user);
   }
 
-  public async findAll(
-    input: IFindAllUsersInput,
-  ): Promise<IFindAllUsersResponse> {
-    const [items, total]: [Array<UserEntity>, number] =
-      await this.findAllUsersUseCase.execute(input);
-
-    return {
-      data: items.map((item: UserEntity) => this.toResponseDto(item)),
-      meta: {
-        page: input.page,
-        limit: input.limit,
-        total,
-        totalPages: Math.ceil(total / input.limit),
-      },
-    };
-  }
-
-  public async findOne(id: string): Promise<UsersResponseDto> {
-    const user: UserEntity = await this.findUserByIdUseCase.execute(id);
-    return this.toResponseDto(user);
-  }
-
-  public async update(
-    id: string,
-    updateDto: UpdateUsersDto,
-  ): Promise<UsersResponseDto> {
-    const user: UserEntity = await this.updateUsersUseCase.execute(
-      id,
-      updateDto,
-    );
-    return this.toResponseDto(user);
-  }
-
-  public async remove(id: string): Promise<void> {
-    await this.deleteUsersUseCase.execute(id);
-  }
-
+  /**
+   * Maps a UserEntity to its corresponding UsersResponseDto.
+   * @param user The user entity to convert.
+   * @returns The users response DTO.
+   */
   private toResponseDto(user: UserEntity): UsersResponseDto {
     return {
       id: user.id,
       username: user.username,
       email: user.email,
+      role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

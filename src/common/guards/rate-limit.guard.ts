@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Guard for rate-limit-aware authentication.
+ *
+ * Allows access only when request.user exists. Used to apply stricter
+ * rate limits to unauthenticated vs authenticated traffic.
+ *
+ * @guard rate-limit
+ */
+
 import type { CanActivate, ExecutionContext } from '@nestjs/common';
 import type { EitherMultiple } from '../types';
 import type { Observable } from 'rxjs';

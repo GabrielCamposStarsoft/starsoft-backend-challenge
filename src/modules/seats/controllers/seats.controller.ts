@@ -1,33 +1,70 @@
+/**
+ * @fileoverview Seats HTTP controller.
+ *
+ * Handles HTTP endpoints related to seat creation in a session.
+ * Only accessible by admin users.
+ *
+ * @controller seats-controller
+ */
+
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
   Body,
-  Param,
-  Query,
+  Controller,
   HttpCode,
   HttpStatus,
+  Post,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { SeatsService } from '../services/seats.service';
-import { CreateSeatsDto } from '../dto/create-seats.dto';
-import { UpdateSeatsDto } from '../dto/update-seats.dto';
-import { SeatsResponseDto } from '../dto/seats-response.dto';
-
-interface ISeatsResponse {
-  data: SeatsResponseDto[];
-  meta: { page: number; limit: number; total: number; totalPages: number };
-}
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { JwtAuthGuard, Roles, RolesGuard, UserRole } from 'src/common';
+import { CreateSeatsDto, SeatsResponseDto } from '../dto';
+import { SeatsService } from '../services';
 
 @ApiTags('seats')
-@Controller('seats')
+@Controller()
 export class SeatsController {
+  /**
+   * Constructs a new `SeatsController` instance.
+   * @param seatsService The service for handling seat operations.
+   */
   constructor(private readonly seatsService: SeatsService) {}
 
+  /**
+   * Creates a new seat in a session.
+   * Restricted to admin users.
+   *
+   * @param {CreateSeatsDto} createDto - Data transfer object for creating seats.
+   * @returns {Promise<SeatsResponseDto>} The created seat details.
+   *
+   * @route POST /seats
+   * @access Admin (JWT, Role-based Guard)
+   * @httpCode 201
+   * @swagger
+   */
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new seat' })
+  @ApiBody({
+    type: CreateSeatsDto,
+    description: 'Session and seat label',
+    examples: {
+      default: {
+        summary: 'Request example',
+        value: {
+          sessionId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+          label: 'A1',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'The seat has been successfully created.',
@@ -38,68 +75,5 @@ export class SeatsController {
     @Body() createDto: CreateSeatsDto,
   ): Promise<SeatsResponseDto> {
     return this.seatsService.create(createDto);
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get all seats' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Return all seats.',
-    type: [SeatsResponseDto],
-  })
-  public async findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
-    @Query('sessionId') sessionId?: string,
-  ): Promise<ISeatsResponse> {
-    return this.seatsService.findAll({ page, limit, sessionId });
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a seat by id' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Return the seat.',
-    type: SeatsResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Seat not found.',
-  })
-  public async findOne(@Param('id') id: string): Promise<SeatsResponseDto> {
-    return this.seatsService.findOne(id);
-  }
-
-  @Put(':id')
-  @ApiOperation({ summary: 'Update a seat' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'The seat has been successfully updated.',
-    type: SeatsResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Seat not found.',
-  })
-  public async update(
-    @Param('id') id: string,
-    @Body() updateDto: UpdateSeatsDto,
-  ): Promise<SeatsResponseDto> {
-    return this.seatsService.update(id, updateDto);
-  }
-
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete a seat' })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'The seat has been successfully deleted.',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Seat not found.',
-  })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  public async remove(@Param('id') id: string): Promise<void> {
-    return this.seatsService.remove(id);
   }
 }

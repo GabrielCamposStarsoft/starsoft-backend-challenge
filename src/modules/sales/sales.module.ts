@@ -1,13 +1,21 @@
+/**
+ * @fileoverview Sales module.
+ *
+ * Manages ticket sales (payment confirmation). Uses outbox for payment.confirmed.
+ * Schedulers relay outbox to RabbitMQ. Consumes PAYMENT_CONFIRMED for cache invalidation.
+ *
+ * @module sales
+ */
+
 import { Module } from '@nestjs/common';
-import { SalesController } from './controllers/sales.controller';
-import { SalesService } from './services/sales.service';
 import { RouterModule } from '@nestjs/core';
-import { SalesUseCases } from './use-cases';
-import { MessagingModule } from '../../core/messaging/messaging.module';
-import { SaleOutboxEntity, SaleEntity } from './entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { OutboxRelayService } from './services/outbox-relay.service';
+import { MessagingModule } from '../../core/messaging/messaging.module';
+import { SalesController } from './controllers';
+import { SaleEntity, SaleOutboxEntity } from './entities';
 import { OutboxRelayScheduler } from './schedulers';
+import { OutboxRelayService, SalesService } from './services';
+import { SalesUseCases } from './use-cases';
 
 @Module({
   imports: [

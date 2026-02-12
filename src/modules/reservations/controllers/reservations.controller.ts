@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Reservations HTTP controller.
+ *
+ * Exposes create, findAll, findOne, delete. Uses idempotency for create.
+ * User-scoped (userId from JWT).
+ *
+ * @controller reservations-controller
+ */
+
 import {
   Body,
   Controller,
@@ -7,13 +16,13 @@ import {
   HttpStatus,
   Param,
   Post,
-  Put,
   Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiQuery,
   ApiResponse,
@@ -23,24 +32,20 @@ import {
   CreateReservationsDto,
   FindAllReservationsDto,
   ReservationsResponseDto,
-  UpdateReservationsDto,
 } from '../dto';
 import { ReservationsService } from '../services';
-import { IdempotencyInterceptor } from 'src/common';
-import type { IMeta } from 'src/common';
-import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../../auth/decorators/current-user.decorator';
-import type { IRequestUser } from '../../auth/interfaces/jwt-payload.interface';
-
-interface IFindAllReservationsResponse {
-  data: ReservationsResponseDto[];
-  meta: IMeta;
-}
-
+import {
+  IdempotencyInterceptor,
+  JwtAuthGuard,
+  RolesGuard,
+  CurrentUser,
+  type IRequestUser,
+} from 'src/common';
+import type { IFindAllReservationsResponse } from '../interfaces';
 @ApiTags('reservations')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
-@Controller('reservations')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller()
 export class ReservationsController {
   /**
    * Constructor for ReservationsController.
@@ -59,6 +64,22 @@ export class ReservationsController {
    */
   @Post()
   @ApiOperation({ summary: 'Reserve one or more seats for a session' })
+  @ApiBody({
+    type: CreateReservationsDto,
+    description: 'Session and seats to reserve',
+    examples: {
+      default: {
+        summary: 'Request example',
+        value: {
+          sessionId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+          seatIds: [
+            'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+            'b2c3d4e5-f6a7-8901-bcde-f12345678901',
+          ],
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Reservations created successfully.',
@@ -69,7 +90,7 @@ export class ReservationsController {
   public create(
     @Body() createDto: CreateReservationsDto,
     @CurrentUser() user: IRequestUser,
-  ): Promise<ReservationsResponseDto[]> {
+  ): Promise<Array<ReservationsResponseDto>> {
     return this.reservationsService.create(createDto, user.id);
   }
 
@@ -106,6 +127,7 @@ export class ReservationsController {
    * @returns {Promise<ReservationsResponseDto>} The requested reservation DTO.
    */
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get a reservation by id' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -116,37 +138,18 @@ export class ReservationsController {
     status: HttpStatus.NOT_FOUND,
     description: 'Reservation not found.',
   })
-  public findOne(@Param('id') id: string): Promise<ReservationsResponseDto> {
-    return this.reservationsService.findOne(id);
-  }
-
-  /**
-   * Update a reservation (e.g., cancel).
-   * @param {string} id - Reservation ID.
-   * @param {UpdateReservationsDto} updateDto - Data for updating the reservation.
-   * @returns {Promise<ReservationsResponseDto>} The updated reservation DTO.
-   */
-  @Put(':id')
-  @ApiOperation({ summary: 'Update a reservation (e.g. cancel)' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'The reservation has been successfully updated.',
-    type: ReservationsResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Reservation not found.',
-  })
-  public update(
+  public findOne(
     @Param('id') id: string,
-    @Body() updateDto: UpdateReservationsDto,
+    @CurrentUser() user: IRequestUser,
   ): Promise<ReservationsResponseDto> {
-    return this.reservationsService.update(id, updateDto);
+    return this.reservationsService.findOne(id, user.id);
   }
 
   /**
    * Delete/cancel a reservation.
+   * Only the reservation owner can delete.
    * @param {string} id - Reservation ID.
+   * @param {IRequestUser} user - Authenticated user from JWT.
    * @returns {Promise<void>} No content.
    */
   @Delete(':id')
@@ -159,8 +162,15 @@ export class ReservationsController {
     status: HttpStatus.NOT_FOUND,
     description: 'Reservation not found.',
   })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'You can only modify your own reservations.',
+  })
   @HttpCode(HttpStatus.NO_CONTENT)
-  public remove(@Param('id') id: string): Promise<void> {
-    return this.reservationsService.remove(id);
+  public remove(
+    @Param('id') id: string,
+    @CurrentUser() user: IRequestUser,
+  ): Promise<void> {
+    return this.reservationsService.remove(id, user.id);
   }
 }

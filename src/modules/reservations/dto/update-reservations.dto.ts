@@ -1,24 +1,39 @@
 /**
- * DTO for updating an existing reservation.
+ * @fileoverview DTO for updating a reservation (e.g. cancellation).
  *
- * Allows for modification of reservation fields, currently limited to status updates.
- *
- * @class UpdateReservationsDto
- * @property {ReservationStatus} [status] - The new status for the reservation (pending, confirmed, expired, cancelled).
+ * @dto update-reservations
  */
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 import { ReservationStatus } from '../enums';
 import type { Optional } from 'src/common';
 
+/**
+ * DTO for updating a reservation (e.g. cancelling).
+ *
+ * @description
+ * Allows changing the reservation status. Valid transitions: PENDING → CANCELLED.
+ * Used in endpoint PATCH /reservations/:id.
+ *
+ * @example
+ * ```json
+ * { "status": "cancelled" }
+ * ```
+ *
+ * @see ReservationsController (update - se existir)
+ * @see ReservationsService
+ */
+@ApiExtraModels(UpdateReservationsDto)
 export class UpdateReservationsDto {
   /**
-   * The new status to set for the reservation, one of: pending, confirmed, expired, cancelled.
+   * New reservation status (e.g. cancelled to cancel).
+   *
+   * @example 'cancelled'
    */
   @ApiPropertyOptional({
-    description: 'Reservation status',
-    example: ReservationStatus.CANCELLED,
+    description: 'New reservation status',
     enum: ReservationStatus,
+    example: ReservationStatus.CANCELLED,
   })
   @IsOptional()
   @IsIn(Object.values(ReservationStatus))

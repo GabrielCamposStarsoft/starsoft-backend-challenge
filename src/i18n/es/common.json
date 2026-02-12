@@ -4,20 +4,21 @@
     "invalid": "Valor inválido",
     "isEmail": "Debe ser un correo electrónico válido",
     "minLength": "Debe tener al menos {min} caracteres",
-    "isStrongPassword": "La contraseña debe contener al menos 1 número, 1 símbolo, 1 letra mayúscula y 1 minúscula"
+    "isStrongPassword": "La contraseña debe contener al menos 1 número, 1 símbolo, 1 mayúscula y 1 minúscula"
   },
   "errors": {
     "notFound": "Recurso no encontrado",
     "conflict": "El recurso ya existe",
     "unauthorized": "Credenciales inválidas",
     "forbidden": "Acceso denegado",
-    "badRequest": "Solicitud incorrecta"
+    "insufficientRole": "Permisos insuficientes. Rol requerido: {roles}",
+    "badRequest": "Solicitud inválida"
   },
   "auth": {
     "invalidCredentials": "Credenciales inválidas",
-    "invalidOrExpiredToken": "Token de actualización inválido o expirado",
+    "invalidOrExpiredToken": "Token de actualización inválido o caducado",
     "logoutSuccess": "Cierre de sesión exitoso",
-    "required": "Autenticación requerida",
+    "required": "Se requiere autenticación",
     "refreshRequired": "Se requiere el token de actualización",
     "invalidTokenType": "Tipo de token inválido",
     "userNoLongerExists": "El usuario ya no existe"
@@ -27,8 +28,9 @@
     "notFoundWithId": "Reserva {id} no encontrada",
     "notPending": "La reserva {id} no está pendiente",
     "expired": "La reserva {id} ha expirado",
-    "cannotDeleteConfirmed": "No se puede eliminar una reserva confirmada (ya vendida)",
-    "invalidTransition": "No se puede cambiar de '{from}' a '{to}'"
+    "cannotDeleteConfirmed": "No es posible eliminar una reserva confirmada (ya vendida)",
+    "invalidTransition": "No se puede pasar de '{from}' a '{to}'",
+    "ownOnly": "Solo puedes modificar tus propias reservas"
   },
   "sale": {
     "notFound": "Venta {id} no encontrada",
@@ -37,16 +39,19 @@
   "seat": {
     "notFound": "Asiento no encontrado",
     "notAvailable": "El asiento {id} no está disponible",
-    "alreadySold": "Asiento ya vendido",
-    "sold": "El asiento está vendido"
+    "notInSession": "El asiento {id} no pertenece a esta sesión",
+    "alreadySold": "El asiento ya está vendido",
+    "sold": "El asiento está vendido",
+    "notReservedForSale": "El asiento debe estar reservado para confirmar el pago"
   },
   "session": {
     "notFound": "Sesión no encontrada",
     "notFoundWithId": "Sesión {id} no encontrada",
-    "finished": "La sesión ha finalizado"
+    "finished": "Sesión finalizada",
+    "notActive": "No se puede reservar asientos para una sesión que no está activa"
   },
   "user": {
     "notFound": "Usuario {id} no encontrado",
-    "emailExists": "Ya existe un usuario con el correo {email}"
+    "emailExists": "Ya existe un usuario con el correo electrónico {email}"
   }
 }

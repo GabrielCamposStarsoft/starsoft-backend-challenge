@@ -2,22 +2,20 @@ import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from '@nestjs/cache-manager';
 import { SeatEntity } from '../../seats/entities';
 import { SeatStatus } from '../../seats/enums';
 import { FindSessionByIdUseCase } from './find-one-sessions.use-case';
-
-const CACHE_TTL_MS = 10_000;
-
-export interface IAvailabilityResponse {
-  sessionId: string;
-  totalSeats: number;
-  availableSeats: number;
-  seats: Array<{ id: string; label: string }>;
-}
+import { Cache } from '@nestjs/cache-manager';
+import { IUseCase, Optional } from 'src/common';
+import type { IGetAvailabilityInput } from './interfaces';
+import type { IAvailabilityResponse } from '../interfaces';
+import { CACHE_TTL_MS } from '../constants';
 
 @Injectable()
-export class GetAvailabilityUseCase {
+export class GetAvailabilityUseCase implements IUseCase<
+  IGetAvailabilityInput,
+  IAvailabilityResponse
+> {
   constructor(
     @InjectRepository(SeatEntity)
     private readonly seatRepository: Repository<SeatEntity>,
@@ -26,34 +24,37 @@ export class GetAvailabilityUseCase {
     private readonly findSessionByIdUseCase: FindSessionByIdUseCase,
   ) {}
 
-  public async execute(sessionId: string): Promise<IAvailabilityResponse> {
+  public async execute(
+    input: IGetAvailabilityInput,
+  ): Promise<IAvailabilityResponse> {
     // Validate that the session exists (throws NotFoundException)
-    await this.findSessionByIdUseCase.execute(sessionId);
+    await this.findSessionByIdUseCase.execute({ id: input.sessionId });
 
-    const cacheKey: string = `seats:session:${sessionId}`;
-    const cached: unknown = await this.cache.get(cacheKey);
-    if (cached != null) return cached as IAvailabilityResponse;
+    const cacheKey: string = `seats:session:${input.sessionId}`;
+    const cached: Optional<IAvailabilityResponse> =
+      await this.cache.get<IAvailabilityResponse>(cacheKey);
+    if (cached) return cached;
 
-    const [seats, totalSeats]: [Array<SeatEntity>, number] =
+    const [availableSeats, availableCount]: [Array<SeatEntity>, number] =
       await this.seatRepository.findAndCount({
-        where: { sessionId },
+        where: { sessionId: input.sessionId, status: SeatStatus.AVAILABLE },
       });
 
-    const availableSeats: Array<SeatEntity> = seats.filter(
-      (s: SeatEntity) => s.status === SeatStatus.AVAILABLE,
-    );
+    const totalSeats: number = await this.seatRepository.count({
+      where: { sessionId: input.sessionId },
+    });
 
     const result: IAvailabilityResponse = {
-      sessionId,
+      sessionId: input.sessionId,
       totalSeats,
-      availableSeats: availableSeats.length,
+      availableSeats: availableCount,
       seats: availableSeats.map((s: SeatEntity) => ({
         id: s.id,
         label: s.label,
       })),
     };
 
-    await this.cache.set(cacheKey, result, CACHE_TTL_MS);
+    await this.cache.set<IAvailabilityResponse>(cacheKey, result, CACHE_TTL_MS);
 
     return result;
   }

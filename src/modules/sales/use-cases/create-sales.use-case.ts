@@ -1,18 +1,11 @@
-// This use case handles the sale creation process. It performs the following steps, all within a transaction
-// to ensure atomicity:
-// 1. Locks the reservation row to avoid race-conditions (using pessimistic write lock),
-//    ensuring no other sale can operate on the same reservation concurrently.
-// 2. Checks if the reservation exists, is pending, and hasn't expired.
-// 3. Locks the corresponding seat to prevent concurrent updates to its status (also pessimistic write lock).
-// 4. Validates that the seat exists and is not already sold.
-// 5. Checks if the session exists.
-// 6. Updates the reservation status to CONFIRMED and the seat status to SOLD, committing both in the DB.
-// 7. Creates and persists the sale entity with relevant details.
-// 8. Creates an outbox event for 'PaymentConfirmed' to support eventual consistency patterns (e.g., distributed transactions).
-// 9. Commits the transaction if everything passes, or rolls back in case of error.
-// 10. Logs the completed sale.
-// The operation uses manual QueryRunner to ensure all these steps are completed in a single transaction.
-
+/**
+ * @fileoverview Use case for handling the sale creation process.
+ *
+ * Ensures all actions are atomic and consistent by performing them inside a single database transaction.
+ * Performs locking and validation on reservations and seats, creates the sale, and writes an outbox event for distributed processing.
+ *
+ * @usecase create-sales-use-case
+ */
 import {
   BadRequestException,
   ConflictException,
@@ -24,35 +17,62 @@ import {
 import { I18nService } from 'nestjs-i18n';
 import { DataSource, QueryRunner } from 'typeorm';
 
-import { IUseCase, Nullable } from 'src/common';
+import type { IUseCase, Nullable } from 'src/common';
 import { ReservationEntity } from '../../reservations/entities';
 import { ReservationStatus } from '../../reservations/enums';
 import { SeatEntity } from '../../seats/entities';
 import { SeatStatus } from '../../seats/enums';
 import { SessionEntity } from '../../sessions/entities';
 import { SaleEntity, SaleOutboxEntity } from '../entities';
-import { ICreateSalesInput } from './interfaces';
+import type { ICreateSalesInput } from './interfaces';
 
 @Injectable()
 export class CreateSalesUseCase implements IUseCase<
   ICreateSalesInput,
   SaleEntity
 > {
+  /**
+   * Logger instance for the use case.
+   * @private
+   * @type {Logger}
+   */
   private readonly logger: Logger = new Logger(CreateSalesUseCase.name);
 
+  /**
+   * @constructor
+   * @param {DataSource} dataSource - TypeORM data source for transaction management.
+   * @param {I18nService} i18n - Service for translation of error messages.
+   */
   constructor(
     private readonly dataSource: DataSource,
     private readonly i18n: I18nService,
   ) {}
 
   /**
-   * Executes the sale creation process within a transaction, ensuring proper state validation and updates.
-   * @param input The sale creation payload, including the reservation to confirm.
-   * @returns The persisted SaleEntity.
-   * @throws NotFoundException, ConflictException, BadRequestException on invalid state.
+   * Executes the sale creation process in a single atomic transaction.
+   *
+   * The method includes:
+   * - Locking and validating the reservation using a pessimistic write lock.
+   * - Validating reservation state (ownership, status, expiration).
+   * - Locking and validating the associated seat using a pessimistic write lock.
+   * - Ensuring the seat is RESERVED.
+   * - Validating the session exists.
+   * - Updating the reservation and seat states.
+   * - Creating and persisting the SaleEntity.
+   * - Creating a SaleOutboxEntity for 'PaymentConfirmed'.
+   * - Committing the transaction on success or rolling back on error.
+   * - Logging the successful sale with outbox event creation.
+   *
+   * @async
+   * @param {ICreateSalesInput} input The payload for creating a sale, including the reservation to confirm and user ID.
+   * @returns {Promise<SaleEntity>} Returns the persisted sale entity.
+   * @throws {NotFoundException} If the reservation, seat, or session is not found.
+   * @throws {ForbiddenException} If the reservation does not belong to the user.
+   * @throws {ConflictException} If the reservation is not pending or the seat is not reserved.
+   * @throws {BadRequestException} If the reservation has expired.
    */
   public async execute(input: ICreateSalesInput): Promise<SaleEntity> {
-    // Create a QueryRunner to manage manual transactions
+    // Create a QueryRunner to manage manual transactions.
     const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
@@ -106,11 +126,14 @@ export class CreateSalesUseCase implements IUseCase<
       );
 
       // Step 4: Validate seat
+      // Seat must be RESERVED to allow confirmation; block if already SOLD or AVAILABLE
       if (!seat) {
         throw new NotFoundException(this.i18n.t('common.seat.notFound'));
       }
-      if (seat.status === SeatStatus.SOLD) {
-        throw new ConflictException(this.i18n.t('common.seat.alreadySold'));
+      if (seat.status !== SeatStatus.RESERVED) {
+        throw new ConflictException(
+          this.i18n.t('common.seat.notReservedForSale'),
+        );
       }
 
       // Step 5: Validate session
@@ -132,7 +155,7 @@ export class CreateSalesUseCase implements IUseCase<
 
       await queryRunner.manager.save([reservation, seat]);
 
-      // Step 7: Create sale entry
+      // Step 7: Create and persist sale entity
       const sale: SaleEntity = queryRunner.manager.create(SaleEntity, {
         reservationId,
         sessionId: reservation.sessionId,
@@ -143,17 +166,20 @@ export class CreateSalesUseCase implements IUseCase<
       const savedSale: SaleEntity = await queryRunner.manager.save(sale);
 
       // Step 8: Write outbox event for distributed consistency
-      const outboxEvent = queryRunner.manager.create(SaleOutboxEntity, {
-        event: 'PaymentConfirmed',
-        payload: {
-          saleId: savedSale.id,
-          reservationId,
-          sessionId: reservation.sessionId,
-          seatId: reservation.seatId,
-          userId: reservation.userId,
-          amount: session.ticketPrice,
+      const outboxEvent: SaleOutboxEntity = queryRunner.manager.create(
+        SaleOutboxEntity,
+        {
+          event: 'PaymentConfirmed',
+          payload: {
+            saleId: savedSale.id,
+            reservationId,
+            sessionId: reservation.sessionId,
+            seatId: reservation.seatId,
+            userId: reservation.userId,
+            amount: session.ticketPrice,
+          },
         },
-      });
+      );
       await queryRunner.manager.save(outboxEvent);
 
       // Step 9: Commit transaction

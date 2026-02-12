@@ -1,98 +1,138 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Cinema Ticket API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API para venda de ingressos de cinema com controle de concorrência, construída com [NestJS](https://nestjs.com), TypeORM e PostgreSQL.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Funcionalidades
 
-## Description
+- **Sessões** — CRUD de sessões de cinema (filme, sala, horário, preço)
+- **Assentos** — Gestão de assentos por sessão (disponível, reservado, vendido)
+- **Reservas** — Reserva com TTL, expiração automática e cancelamento; UPDATE atômico condicional para evitar double-booking
+- **Vendas** — Confirmação de reserva → venda com lock pessimista e idempotência
+- **Autenticação** — JWT (access + refresh), Argon2, rate limiting
+- **Outbox Pattern** — Eventos (ReservationCreated, ReservationExpired, PaymentConfirmed, etc.) via RabbitMQ com relay e DLQ
+- **Cache** — Valkey/Redis para disponibilidade de assentos e idempotency
+- **i18n** — Mensagens em EN, ES e PT
+- **Documentação** — OpenAPI (Scalar) em `/api-docs`
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Pré-requisitos
 
-## Project setup
+- [Node.js](https://nodejs.org/) 20+
+- [pnpm](https://pnpm.io/)
+- [Docker](https://www.docker.com/) e Docker Compose (para subir dependências ou a stack completa)
 
-```bash
-$ pnpm install
+## Variáveis de ambiente
+
+Crie um arquivo `.env` na raiz do projeto. Exemplo:
+
+```env
+# Servidor
+NODE_ENV=development
+PORT=8088
+
+# Banco de dados (obrigatório para a API)
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_NAME=cinema
+# DATABASE_LOGGING=true   # opcional, para SQL em desenvolvimento
+
+# Cache (Valkey/Redis)
+VALKEY_URL=redis://localhost:6379
+
+# Mensageria (RabbitMQ)
+RMQ_URL=amqp://guest:guest@localhost:5672
+
+# Autenticação JWT (obrigatório para login/registro)
+JWT_SECRET=your-secret-key-min-32-chars
+# JWT_ACCESS_EXPIRATION=15m   # opcional
+# JWT_REFRESH_EXPIRATION=7d   # opcional
+
+# Reservas (opcional)
+# RESERVATION_TTL_MS=30000
 ```
 
-## Compile and run the project
+Com Docker Compose, a API usa `DATABASE_HOST=db`, `VALKEY_URL` e `RMQ_URL` apontando para os serviços da rede interna; você pode sobrescrever via `environment` no `compose` ou manter um `.env` que o Compose injeta.
+
+## Instalação
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm install
 ```
 
-## Run tests
+## Execução
+
+### Opção 1: Tudo com Docker
+
+Sobe API, PostgreSQL, Valkey e RabbitMQ (migrations rodam no startup da API):
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+pnpm run docker:up
 ```
 
-## Deployment
+- API: http://localhost:8088  
+- Documentação: http://localhost:8088/api-docs  
+- Health: http://localhost:8088/health  
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Opção 2: Apenas dependências locais
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Com PostgreSQL, Valkey e RabbitMQ rodando localmente (ou em Docker), na raiz do projeto:
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# Migrations (uma vez ou após alterações)
+pnpm run migration:run
+
+# Seed (opcional)
+pnpm run seed
+
+# Desenvolvimento (watch)
+pnpm run dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+A API estará em `http://localhost:8088` (ou na `PORT` definida no `.env`).
 
-## Resources
+## Scripts principais
 
-Check out a few resources that may come in handy when working with NestJS:
+| Comando | Descrição |
+|--------|-----------|
+| `pnpm run dev` | Inicia em modo watch (desenvolvimento) |
+| `pnpm run build` | Compila para produção |
+| `pnpm run start` | Inicia em modo normal |
+| `pnpm run start:prod` | Inicia o build de produção (`node dist/main`) |
+| `pnpm run migration:run` | Executa migrations TypeORM |
+| `pnpm run seed` | Executa seeders |
+| `pnpm run docker:up` | Sobe stack com Docker Compose |
+| `pnpm run docker:down` | Derruba os containers |
+| `pnpm run test` | Testes unitários |
+| `pnpm run test:e2e` | Testes e2e |
+| `pnpm run lint` | ESLint com fix |
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Documentação da API
 
-## Support
+Com a aplicação rodando, acesse:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- **Scalar (OpenAPI):** http://localhost:8088/api-docs  
 
-## Stay in touch
+Endpoints protegidos exigem `Authorization: Bearer <access_token>` (obtido em `POST /auth/login` ou `POST /auth/register`).
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Estrutura do projeto (resumo)
 
-## License
+```
+src/
+├── common/           # Filtros, guards, decorators, interfaces, i18n
+├── core/             # Messaging (RabbitMQ consumer, DLQ)
+├── modules/
+│   ├── auth/         # Login, registro, JWT, refresh token
+│   ├── health/       # Health check
+│   ├── users/        # CRUD de usuários
+│   ├── sessions/     # Sessões de cinema (CRUD + disponibilidade com cache)
+│   ├── seats/        # Assentos por sessão
+│   ├── reservations/ # Reservas, expiração, outbox, schedulers
+│   └── sales/        # Vendas, outbox, idempotência
+├── migrations/       # Migrations TypeORM
+└── main.ts           # Bootstrap Fastify + microserviço RMQ
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Licença
+
+UNLICENSED (projeto privado).

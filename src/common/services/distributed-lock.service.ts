@@ -1,86 +1,82 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
+/**
+ * @fileoverview Implements distributed locking using Redis and Redlock.
+ *
+ * Enables mutual exclusion for tasks across multiple process instances,
+ * typically used by schedulers or distributed job handlers.
+ *
+ * @service distributed-lock
+ */
+
+import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
+import type Redis from 'ioredis';
 import Redlock, { CompatibleRedisClient, type Lock } from 'redlock';
 import type { Optional } from '../types';
 
 /**
- * @class DistributedLockService
- * @description
- * Provides distributed locking using the Redlock algorithm with Redis as a backend.
- * Handles acquiring and releasing locks in a distributed system, ensuring mutual exclusion.
+ * Service for handling distributed locks backed by Redis using the Redlock algorithm.
+ *
+ * Allows safe acquisition and release of locks with TTL guarantees for multi-instance coordination.
+ *
+ * @class
+ * @implements {OnModuleDestroy}
  */
 @Injectable()
 export class DistributedLockService implements OnModuleDestroy {
   /**
-   * The Redis client instance used for Redlock coordination.
-   * @private
-   * @type {Redis}
-   */
-  private readonly redis: CompatibleRedisClient;
-
-  /**
-   * The Redlock instance for distributed locking.
-   * @private
+   * Instance of the Redlock distributed lock manager.
    * @type {Redlock}
+   * @private
    */
   private readonly redlock: Redlock;
 
   /**
-   * In-memory map of currently held locks, indexed by lock key.
+   * Holds locks currently acquired by this service, indexed by lock key.
    * @private
    * @type {Map<string, Lock>}
    */
   private readonly heldLocks: Map<string, Lock> = new Map<string, Lock>();
 
   /**
-   * Creates an instance of DistributedLockService.
-   * @param {ConfigService} config - Service to retrieve config such as the Redis connection URI.
+   * Initializes the distributed lock service with the given Redis client.
+   * Sets up Redlock for lock coordination.
+   *
+   * @param {Redis} redis - Injected Redis client.
    */
-  constructor(private readonly config: ConfigService) {
-    const url: string =
-      this.config.get<string>('VALKEY_URL') ?? 'redis://localhost:6379';
-    this.redis = new Redis(url) as unknown as CompatibleRedisClient;
-    this.redlock = new Redlock([this.redis], {
-      /**
-       * The expected clock drift for Redis (useful for correct expiration).
-       * @type {number}
-       */
-      driftFactor: 0.01,
-
-      /**
-       * Number of retry attempts to acquire the lock before failing.
-       * @type {number}
-       */
-      retryCount: 0,
-
-      /**
-       * Delay between lock acquire retries (ms).
-       * @type {number}
-       */
-      retryDelay: 200,
-
-      /**
-       * Jitter for lock acquire retry delay (ms).
-       * @type {number}
-       */
-      retryJitter: 200,
-
-      /**
-       * Threshold before expiration to auto-extend the lock (ms).
-       * @type {number}
-       */
-    });
+  constructor(@Inject('REDIS') private readonly redis: Redis) {
+    this.redlock = new Redlock(
+      [this.redis as unknown as CompatibleRedisClient],
+      {
+        /**
+         * Account for clock drift and Redis replication delays. Used by Redlock.
+         * @type {number}
+         */
+        driftFactor: 0.01,
+        /**
+         * Number of attempts to retry acquiring the lock before failing.
+         * @type {number}
+         */
+        retryCount: 0,
+        /**
+         * Milliseconds to wait between lock acquisition attempts.
+         * @type {number}
+         */
+        retryDelay: 200,
+        /**
+         * Maximum milliseconds of randomized additional delay between retries.
+         * @type {number}
+         */
+        retryJitter: 200,
+      },
+    );
   }
 
   /**
-   * Attempts to acquire a distributed lock with the specified key and TTL.
-   * If acquired, the lock is stored and `true` is returned.
-   * If acquisition fails (lock held elsewhere), returns `false`.
+   * Acquire a distributed lock for a resource key with a specified TTL.
+   * Returns true if lock was successfully acquired and stored, false if unavailable.
    *
-   * @param {string} key - The unique key representing the lock resource.
-   * @param {number} ttlSeconds - The time-to-live for the lock in seconds.
-   * @returns {Promise<boolean>} Promise resolving to `true` if the lock was acquired, otherwise `false`.
+   * @param {string} key - Unique identifier for the lock.
+   * @param {number} ttlSeconds - Lock expiration in seconds.
+   * @returns {Promise<boolean>} True if lock was acquired, false otherwise.
    */
   public async acquire(key: string, ttlSeconds: number): Promise<boolean> {
     try {
@@ -88,17 +84,17 @@ export class DistributedLockService implements OnModuleDestroy {
       this.heldLocks.set(key, lock);
       return true;
     } catch {
-      // Lock could not be acquired (already held elsewhere, or error)
+      // Could not acquire lock, possibly already held by another instance.
       return false;
     }
   }
 
   /**
-   * Releases a lock previously acquired by this instance for the specified key.
-   * If the lock is not held by this instance, this operation does nothing.
+   * Release a distributed lock, if currently held, for the specified key.
+   * Does nothing if the lock is not held by this instance.
    *
-   * @param {string} key - The key of the lock to release.
-   * @returns {Promise<void>} Promise that resolves when the release action completes.
+   * @param {string} key - Unique identifier for the lock to release.
+   * @returns {Promise<void>} Resolves when release is complete.
    */
   public async release(key: string): Promise<void> {
     const lock: Optional<Lock> = this.heldLocks.get(key);
@@ -111,10 +107,10 @@ export class DistributedLockService implements OnModuleDestroy {
   }
 
   /**
-   * Handles cleanup logic on shutdown/module destroy lifecycle event.
-   * Closes the underlying Redlock (and Redis) connection.
+   * Cleans up resources and connections during module destruction.
+   * Closes internal Redlock connection to Redis.
    *
-   * @returns {Promise<void>} Promise indicating completion of shutdown cleanup.
+   * @returns {Promise<void>}
    */
   public async onModuleDestroy(): Promise<void> {
     await this.redlock.quit();

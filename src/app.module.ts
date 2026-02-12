@@ -1,11 +1,20 @@
+/**
+ * @fileoverview Root application module.
+ *
+ * Composes all feature modules, shared infrastructure (CommonModule, MessagingModule),
+ * and cross-cutting concerns: database (TypeORM), cache (Keyv/Redis), i18n, throttling,
+ * and scheduled jobs. Provides single APP_GUARD for throttler path skipping.
+ *
+ * @module app
+ */
+
 import KeyvRedis from '@keyv/redis';
 import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { ThrottlerSkipPathsGuard } from './common/guards/throttler-skip-paths.guard';
-import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   AcceptLanguageResolver,
@@ -13,9 +22,9 @@ import {
   I18nModule,
   QueryResolver,
 } from 'nestjs-i18n';
-import { getI18nPath } from './common';
-import { CommonModule } from './common/common.module';
-import { MessagingModule } from './core/messaging/messaging.module';
+import { typeOrmConnectionOptions } from '../database-options';
+import { I18N_PATH, CommonModule, ThrottlerSkipPathsGuard } from 'src/common';
+import { MessagingModule } from 'src/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
 import { ReservationsModule } from './modules/reservations/reservations.module';
@@ -23,7 +32,6 @@ import { SalesModule } from './modules/sales/sales.module';
 import { SeatsModule } from './modules/seats/seats.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { UsersModule } from './modules/users/users.module';
-
 @Module({
   imports: [
     CommonModule,
@@ -49,7 +57,7 @@ import { UsersModule } from './modules/users/users.module';
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
-        path: getI18nPath(),
+        path: I18N_PATH,
         watch: process.env.NODE_ENV !== 'production',
         includeSubfolders: true,
       },
@@ -68,12 +76,7 @@ import { UsersModule } from './modules/users/users.module';
       ],
     }),
     TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DATABASE_HOST,
-      port: parseInt(process.env.DATABASE_PORT ?? '5432'),
-      username: process.env.DATABASE_USER,
-      password: process.env.DATABASE_PASSWORD,
-      database: process.env.DATABASE_NAME,
+      ...typeOrmConnectionOptions,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false,
       logging:
@@ -95,4 +98,11 @@ import { UsersModule } from './modules/users/users.module';
     },
   ],
 })
+/**
+ * Root NestJS module aggregating all application modules and global configuration.
+ *
+ * @description Wires Auth, Health, Reservations, Sales, Seats, Sessions, and Users modules.
+ * Schedules cron/intervals via ScheduleModule. Uses ThrottlerSkipPathsGuard to bypass
+ * rate limiting on excluded paths (e.g. health checks, docs).
+ */
 export class AppModule {}

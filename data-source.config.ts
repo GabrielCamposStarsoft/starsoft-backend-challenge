@@ -1,18 +1,23 @@
-import 'dotenv/config';
+/**
+ * @fileoverview TypeORM DataSource for CLI migrations.
+ *
+ * Exported DataSource used by TypeORM CLI (typeorm migration:run, etc.).
+ * Shares database options with the application via config/database-options.
+ * Entities and migrations paths point to src for both .ts and .js (compiled).
+ *
+ * @config data-source
+ */
+
 import { DataSource } from 'typeorm';
 import { join as joinPath } from 'path';
+import { typeOrmConnectionOptions } from './database-options';
 
 export default new DataSource({
-  type: 'postgres',
-  host: process.env.DATABASE_HOST ?? 'localhost',
-  port: parseInt(process.env.DATABASE_PORT ?? '5432', 10),
-  username: process.env.DATABASE_USER ?? 'postgres',
-  password: process.env.DATABASE_PASSWORD ?? 'postgres',
-  database: process.env.DATABASE_NAME ?? 'cinema',
+  ...typeOrmConnectionOptions,
   entities: [joinPath(__dirname, 'src', '**', '*.entity{.ts,.js}')],
   migrations: [
-    joinPath(__dirname, 'src', 'migrations', '*.ts'),
-    joinPath(__dirname, 'src', 'migrations', '*.js'),
+    joinPath(__dirname, 'src', 'infra', 'migrations', '*.ts'),
+    joinPath(__dirname, 'src', 'infra', 'migrations', '*.js'),
   ],
   synchronize: false,
 });

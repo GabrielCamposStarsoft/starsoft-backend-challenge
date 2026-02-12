@@ -1,15 +1,28 @@
 /**
- * Represents a generic application use case.
+ * @fileoverview Use case contract for application logic.
  *
- * @template Input - The type of the input data required for the use case.
- * @template Output - The type of the result produced by the use case.
+ * All domain operations follow this interface: execute(input) => output.
+ *
+ * @interface use-case
+ */
+
+import type { Either } from '../types';
+
+/**
+ * Generic use case abstraction.
+ *
+ * @description Encapsulates single business operation. Input and output
+ * are strongly typed. execute can return Promise or synchronous value.
+ *
+ * @template Input - Type of input data
+ * @template Output - Type of result
  */
 export interface IUseCase<Input, Output> {
   /**
-   * Executes the use case logic with the given input data.
+   * Runs the use case with the given input.
    *
-   * @param data - The input data for the use case.
-   * @returns A promise resolving to the output of the use case.
+   * @param data - Input for the use case
+   * @returns Output or Promise of output
    */
-  execute(data: Input): Promise<Output>;
+  execute(data: Input): Either<Promise<Output>, Output>;
 }

@@ -1,27 +1,42 @@
+/**
+ * @fileoverview Dead letter queue setup service.
+ *
+ * On module init, asserts DLX and DLQ in RabbitMQ so nacked messages
+ * are routed to the DLQ for inspection/retry.
+ *
+ * @service dlq-setup
+ */
+
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as amqplib from 'amqplib';
-import { RMQ_DLQ, RMQ_DLX } from '../../../common/constants/events.constants';
+import { type ChannelModel, connect as amqConnect } from 'amqplib';
+import { RMQ_DLQ, RMQ_DLX } from '../../../common/constants';
+import { Channel } from 'amqp-connection-manager';
 
 /**
- * Asserts the Dead Letter Exchange (DLX) and Dead Letter Queue (DLQ) on startup.
+ * Asserts DLX and DLQ on application startup.
  *
- * When a consumer nacks a message without requeue, RabbitMQ routes the message
- * to the DLX which delivers it to the DLQ for later inspection or retry.
+ * @description Creates durable direct exchange (DLX) and queue (DLQ), bound
+ * so nacked messages are routed for later inspection.
  */
 @Injectable()
 export class DlqSetupService implements OnModuleInit {
-  private readonly logger = new Logger(DlqSetupService.name);
+  private readonly logger: Logger = new Logger(DlqSetupService.name);
 
   constructor(private readonly config: ConfigService) {}
 
+  /**
+   * Connects to RabbitMQ and asserts DLX, DLQ, and binding.
+   *
+   * @description Logs success or warning on failure. Does not throw.
+   */
   public async onModuleInit(): Promise<void> {
     const url: string =
       this.config.get<string>('RMQ_URL') ?? 'amqp://guest:guest@localhost:5672';
 
     try {
-      const connection = await amqplib.connect(url);
-      const channel = await connection.createChannel();
+      const connection: ChannelModel = await amqConnect(url);
+      const channel: Channel = await connection.createChannel();
 
       await channel.assertExchange(RMQ_DLX, 'direct', { durable: true });
       await channel.assertQueue(RMQ_DLQ, { durable: true });
