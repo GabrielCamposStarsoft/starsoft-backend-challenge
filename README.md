@@ -1073,21 +1073,6 @@ curl -X POST http://localhost:8088/sales \
 
 ---
 
-## Melhorias Futuras
-
-- Lock ou constraint na criacao de sessoes (ex: `EXCLUDE USING gist` no PostgreSQL)
-- Isolation level explicito nas transacoes criticas e documentacao da escolha
-- Retry com backoff exponencial no relay de outbox
-- Indices parciais nas tabelas de outbox para queries de relay (`WHERE published = false`)
-- Job para limpeza de registros de outbox ja publicados
-- Ajuste do Throttler para ambiente de desenvolvimento/teste
-- Connection pool tuning (`poolSize`, `connectionTimeout`) conforme carga esperada
-- Teste de edge case: pagamento no limite da expiracao (ex: TTL 2s, pagamento em 1.9s)
-- Observabilidade: metricas Prometheus, tracing distribuido (OpenTelemetry)
-- Circuit breaker no relay de outbox para lidar com indisponibilidade do RabbitMQ
-
----
-
 ## Exemplo de Fluxo para Testar
 
 1. **Registrar usuario**
