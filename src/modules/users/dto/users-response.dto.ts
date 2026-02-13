@@ -10,10 +10,9 @@ import { UserRole } from 'src/common';
  * DTO de resposta representando um usuário.
  *
  * @description
- * Returned in GET /auth/me, POST /auth/register and UsersService.create.
+ * Returned in GET /auth/me and UsersService.create.
  *
  * @see AuthController.me
- * @see AuthController.register
  * @see UsersService
  */
 export class UsersResponseDto {

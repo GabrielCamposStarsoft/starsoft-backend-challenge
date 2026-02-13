@@ -23,7 +23,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import type { UsersResponseDto } from '../../users/dto';
 import { CurrentUser, type IRequestUser, JwtAuthGuard } from 'src/common';
 import { LoginDto, LogoutDto, RefreshTokenDto, RegisterDto } from '../dtos';
 import { JwtRefreshGuard } from '../guards';
@@ -53,8 +52,9 @@ export class AuthController {
 
   /**
    * Registers a new user with the given credentials.
+   * Returns tokens (same format as login) so the user is automatically logged in.
    * @param dto Registration data transfer object.
-   * @returns The DTO of the newly created user.
+   * @returns ILoginResponse with accessToken, refreshToken, and expiresIn.
    *
    * @throttle 3 requests per hour per IP
    * @route POST /register
@@ -72,13 +72,16 @@ export class AuthController {
       },
     },
   })
-  @ApiResponse({ status: HttpStatus.CREATED, description: 'User created' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'User created, returns access and refresh tokens',
+  })
   @ApiResponse({
     status: HttpStatus.CONFLICT,
     description: 'Email already exists',
   })
   @HttpCode(HttpStatus.CREATED)
-  public register(@Body() dto: RegisterDto): Promise<UsersResponseDto> {
+  public register(@Body() dto: RegisterDto): Promise<ILoginResponse> {
     return this.authService.register(dto);
   }
 

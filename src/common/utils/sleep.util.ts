@@ -1,9 +1,16 @@
 import type { Either } from '../types';
 
 /**
- * Async sleep for polling without busy-waiting.
+ * Pauses execution asynchronously for the specified number of milliseconds.
  *
- * @param ms - Milliseconds to sleep
+ * Useful in async/await workflows to introduce a delay without blocking the event loop.
+ *
+ * @util sleep
+ * @param {number} ms - Number of milliseconds to pause execution.
+ * @returns {Promise<void>} A Promise that resolves after the given delay.
+ *
+ * @example
+ * await sleep(1000); // sleep for 1 second
  */
 export const sleep: (ms: number) => Promise<void> = (
   ms: number,

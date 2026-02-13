@@ -9,7 +9,6 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import type { IRequestUser, Nullable } from 'src/common';
-import type { UsersResponseDto } from '../../users/dto';
 import type { UserEntity } from '../../users/entities';
 import type { LoginDto, RegisterDto } from '../dtos';
 import type { ILoginResponse, IRefreshResponse } from '../interfaces';
@@ -56,12 +55,29 @@ export class AuthService {
   }
 
   /**
-   * Registers a new user.
+   * Registers a new user and returns tokens (same format as login).
    * @param dto Registration data transfer object.
-   * @returns The created user as a UsersResponseDto.
+   * @returns ILoginResponse with accessToken, refreshToken, and expiresIn.
    */
-  public async register(dto: RegisterDto): Promise<UsersResponseDto> {
-    return this.registerAuthUseCase.execute(dto);
+  public async register(dto: RegisterDto): Promise<ILoginResponse> {
+    const user = await this.registerAuthUseCase.execute(dto);
+    const { accessToken, expiresIn }: ISignAccessTokenResponse =
+      this.signAccessTokenUseCase.execute({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+      });
+    const refreshToken: string = await this.createRefreshTokenUseCase.execute({
+      userId: user.id,
+    });
+    this.logger.log(
+      `User registered and logged in: ${user.id} (${user.email})`,
+    );
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn,
+    };
   }
 
   /**
