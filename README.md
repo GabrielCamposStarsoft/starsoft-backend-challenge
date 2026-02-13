@@ -903,7 +903,7 @@ curl -X POST http://localhost:8088/auth/login \
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": { "id": "...", "email": "user@example.com", "role": "user" }
+  "expiresIn": 900
 }
 ```
 
@@ -1070,6 +1070,23 @@ curl -X POST http://localhost:8088/sales \
 6. **Limpeza de outbox**: Registros publicados nao sao removidos; tabelas crescem ao longo do tempo
 7. **Idempotency polling**: Timeout de ~305s; requests duplicadas podem ficar presas em polling
 8. **Throttler restritivo**: 10 req/min por IP pode limitar testes manuais intensivos
+
+
+---
+
+## Melhorias Futuras
+
+- Lock ou constraint na criacao de sessoes (ex: `EXCLUDE USING gist` no PostgreSQL)
+- Isolation level explicito nas transacoes criticas e documentacao da escolha
+- Retry com backoff exponencial no relay de outbox
+- Indices parciais nas tabelas de outbox para queries de relay (`WHERE published = false`)
+- Job para limpeza de registros de outbox ja publicados
+- Ajuste do Throttler para ambiente de desenvolvimento/teste
+- Connection pool tuning (`poolSize`, `connectionTimeout`) conforme carga esperada
+- Teste de edge case: pagamento no limite da expiracao (ex: TTL 2s, pagamento em 1.9s)
+- Observabilidade: metricas Prometheus, tracing distribuido (OpenTelemetry)
+- Circuit breaker no relay de outbox para lidar com indisponibilidade do RabbitMQ
+
 
 ---
 
