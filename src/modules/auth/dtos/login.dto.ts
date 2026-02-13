@@ -4,7 +4,7 @@
  * @dto login
  */
 
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 /**
@@ -25,7 +25,6 @@ import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
  * @see AuthController.login
  * @see AuthService.login
  */
-@ApiExtraModels(LoginDto)
 export class LoginDto {
   /**
    * Registered user email.

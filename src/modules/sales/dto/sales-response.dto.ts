@@ -3,7 +3,7 @@
  *
  * @dto sales-response
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 /**
  * DTO de resposta representando uma venda.
@@ -14,7 +14,6 @@ import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
  * @see SalesController
  * @see SalesService
  */
-@ApiExtraModels(SalesResponseDto)
 export class SalesResponseDto {
   /**
    * Sale unique identifier

@@ -128,8 +128,9 @@ export class UpdateSessionUseCase implements IUseCase<
         'movieTitle' | 'roomName' | 'startTime' | 'endTime' | 'ticketPrice'
       >
     > = {};
-    if (movieTitle !== undefined) updatePayload.movieTitle = movieTitle;
-    if (roomName !== undefined) updatePayload.roomName = roomName;
+    if (movieTitle !== undefined)
+      updatePayload.movieTitle = movieTitle ?? undefined;
+    if (roomName !== undefined) updatePayload.roomName = roomName ?? undefined;
     if (typeof startTime === 'string')
       updatePayload.startTime = new Date(startTime);
     if (typeof endTime === 'string') updatePayload.endTime = new Date(endTime);

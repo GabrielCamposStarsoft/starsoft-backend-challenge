@@ -3,11 +3,7 @@
  *
  * @dto create-users
  */
-import {
-  ApiExtraModels,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEnum,
@@ -39,7 +35,6 @@ import { type Optional, UserRole } from 'src/common';
  * @see AuthController.register
  * @see UsersService.create
  */
-@ApiExtraModels(CreateUsersDto)
 export class CreateUsersDto {
   /**
    * Username (unique in the system).

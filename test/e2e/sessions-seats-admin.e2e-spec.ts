@@ -58,7 +58,7 @@ describe('E2E Sessions & Seats Admin', () => {
     await app.init();
     await (app.getHttpAdapter().getInstance() as FastifyInstance).ready();
 
-    const scenario = await createFullTestScenario(ds, { seatCount: 8 });
+    const scenario = await createFullTestScenario(ds, { seatCount: 16 });
     session = scenario.session;
     seats = scenario.seats;
     admin = scenario.admin;
@@ -86,7 +86,7 @@ describe('E2E Sessions & Seats Admin', () => {
 
   it('should PATCH /sessions/:id — update movie, room, time, price', async () => {
     const newTitle = 'Updated Movie Title';
-    const newRoom = 'Sala VIP';
+    const newRoom = `Sala-VIP-${Date.now()}`;
     const newStart = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
     const newEnd = new Date(Date.now() + 50 * 60 * 60 * 1000).toISOString();
     const newPrice = 35.5;

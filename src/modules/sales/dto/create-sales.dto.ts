@@ -3,7 +3,7 @@
  *
  * @dto create-sales
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsUUID } from 'class-validator';
 
 /**
@@ -20,7 +20,6 @@ import { IsNotEmpty, IsUUID } from 'class-validator';
  * @see SalesController.create
  * @see SalesService.create
  */
-@ApiExtraModels(CreateSalesDto)
 export class CreateSalesDto {
   /**
    * UUID of the reservation whose payment will be confirmed.

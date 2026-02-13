@@ -3,7 +3,7 @@
  *
  * @dto create-seats
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 
 /**
@@ -23,7 +23,6 @@ import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
  * @see SeatsController.create
  * @see SeatsService.create
  */
-@ApiExtraModels(CreateSeatsDto)
 export class CreateSeatsDto {
   /**
    * The UUID of the session to which the seat will be attached.

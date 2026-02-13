@@ -3,7 +3,7 @@
  *
  * @dto reservations-response
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { ReservationStatus } from '../enums';
 
 /**
@@ -15,7 +15,6 @@ import { ReservationStatus } from '../enums';
  * @see ReservationsController
  * @see ReservationsService
  */
-@ApiExtraModels(ReservationsResponseDto)
 export class ReservationsResponseDto {
   /**
    * Reservation unique identifier

@@ -3,7 +3,7 @@
  *
  * @dto find-all-reservations
  */
-import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ReservationStatus } from '../enums';
@@ -23,7 +23,6 @@ import type { Optional } from 'src/common';
  * @see ReservationsController.findAll
  * @see ReservationsService.findAll
  */
-@ApiExtraModels(FindAllReservationsDto)
 export class FindAllReservationsDto {
   /**
    * Page number (1-based). Default: 1

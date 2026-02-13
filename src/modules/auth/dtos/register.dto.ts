@@ -3,7 +3,7 @@
  *
  * @dto register
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
@@ -31,7 +31,6 @@ import {
  * @see AuthController.register
  * @see AuthService.register
  */
-@ApiExtraModels(RegisterDto)
 export class RegisterDto {
   /**
    * User email (unique in the system).

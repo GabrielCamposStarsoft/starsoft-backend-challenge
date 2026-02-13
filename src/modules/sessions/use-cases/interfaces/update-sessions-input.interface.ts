@@ -1,3 +1,4 @@
+import type { Optional } from 'src/common';
 /**
  * Input interface for updating a session.
  *
@@ -12,9 +13,9 @@
  */
 export interface IUpdateSessionsInput {
   id: string;
-  movieTitle?: string;
-  roomName?: string;
-  startTime?: string;
-  endTime?: string;
-  ticketPrice?: number;
+  movieTitle?: Optional<string>;
+  roomName?: Optional<string>;
+  startTime?: Optional<string>;
+  endTime?: Optional<string>;
+  ticketPrice?: Optional<number>;
 }

@@ -3,7 +3,7 @@
  *
  * @dto seat-response
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDate,
   IsEnum,
@@ -22,7 +22,6 @@ import { SeatStatus } from 'src/modules/seats/enums';
  * @see SessionsController
  * @see SessionsService
  */
-@ApiExtraModels(SeatResponseDto)
 export class SeatResponseDto {
   /**
    * Seat unique identifier (UUID)

@@ -23,7 +23,7 @@ import {
   QueryResolver,
 } from 'nestjs-i18n';
 import { typeOrmConnectionOptions } from '../database-options';
-import { I18N_PATH, CommonModule, ThrottlerSkipPathsGuard } from 'src/common';
+import { I18N_PATH, ThrottlerSkipPathsGuard } from 'src/common';
 import { MessagingModule } from 'src/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
@@ -32,6 +32,7 @@ import { SalesModule } from './modules/sales/sales.module';
 import { SeatsModule } from './modules/seats/seats.module';
 import { SessionsModule } from './modules/sessions/sessions.module';
 import { UsersModule } from './modules/users/users.module';
+import { CommonModule } from './common/common.module';
 @Module({
   imports: [
     CommonModule,

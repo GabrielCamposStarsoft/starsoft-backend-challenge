@@ -4,12 +4,9 @@
   "setupFiles": ["<rootDir>/setup-e2e.ts"],
   "testEnvironment": "node",
   "testRegex": "\\.e2e-spec\\.ts$",
-  "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  },
-  "moduleNameMapper": {
-    "^src/(.*)$": "<rootDir>/../src/$1"
-  },
+  "transform": {"^.+\\.(t|j)s$": "ts-jest"},
+  "moduleNameMapper": {"^src/(.*)$": "<rootDir>/../src/$1"},
   "testTimeout": 60000,
-  "verbose": true
+  "verbose": true,
+  "maxWorkers": 1
 }

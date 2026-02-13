@@ -3,15 +3,15 @@
  *
  * @dto create-sessions
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsDateString,
   IsNotEmpty,
   IsNumber,
   IsString,
-  IsDateString,
   Min,
 } from 'class-validator';
-import { StartBeforeEnd } from 'src/common/validators/start-before-end.validator';
+import { StartBeforeEnd } from 'src/common';
 
 /**
  * DTO for creating a cinema session (movie, room, schedule, price).
@@ -33,7 +33,6 @@ import { StartBeforeEnd } from 'src/common/validators/start-before-end.validator
  * @see SessionsController.create
  * @see SessionsService.create
  */
-@ApiExtraModels(CreateSessionsDto)
 export class CreateSessionsDto {
   /**
    * Movie title.

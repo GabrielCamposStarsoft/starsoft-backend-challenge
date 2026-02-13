@@ -49,7 +49,7 @@ describe('Concurrency: 10 users, same seat', () => {
     await (app.getHttpAdapter().getInstance() as FastifyInstance).ready();
 
     const scenario = await createFullTestScenario(ds, {
-      seatCount: 2,
+      seatCount: 16, // MIN_SEATS_PER_SESSION - required for reservation validation
       userCount: 10,
     });
     session = scenario.session;

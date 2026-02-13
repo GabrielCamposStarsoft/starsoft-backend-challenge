@@ -3,7 +3,7 @@
  *
  * @dto logout
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 /**
@@ -23,7 +23,6 @@ import { IsNotEmpty, IsString } from 'class-validator';
  * @see AuthController.logout
  * @see AuthService.logout
  */
-@ApiExtraModels(LogoutDto)
 export class LogoutDto {
   /**
    * Refresh token retornado no login a ser invalidado.

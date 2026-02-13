@@ -15,9 +15,13 @@ import { SaleEntity } from '../sales/entities';
 import { SessionEntity } from './entities';
 import { SeatEntity } from '../seats/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { RouterModule } from '@nestjs/core';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SessionEntity, SeatEntity, SaleEntity])],
+  imports: [
+    TypeOrmModule.forFeature([SessionEntity, SeatEntity, SaleEntity]),
+    RouterModule.register([{ path: 'sessions', module: SessionsModule }]),
+  ],
   controllers: [SessionsController],
   providers: [SessionsService, ...SessionsUseCases],
   exports: [SessionsService],

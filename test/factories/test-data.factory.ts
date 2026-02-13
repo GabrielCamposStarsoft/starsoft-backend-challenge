@@ -146,9 +146,10 @@ export async function createFullTestScenario(
     options?.seatCount ?? 16,
   );
 
+  const uniqueId: string = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const admin: TestUser = await createTestAdmin(ds, {
-    email: `admin-${Date.now()}@test.com`,
-    username: `admin${Date.now()}`,
+    email: `admin-${uniqueId}@test.com`,
+    username: `admin-${uniqueId}`,
   });
 
   const userCount = options?.userCount ?? 5;
@@ -156,8 +157,8 @@ export async function createFullTestScenario(
   for (let i = 0; i < userCount; i++) {
     users.push(
       await createTestUser(ds, {
-        email: `user${i}-${Date.now()}@test.com`,
-        username: `user${i}`,
+        email: `user${i}-${uniqueId}@test.com`,
+        username: `user${i}-${uniqueId}`,
       }),
     );
   }

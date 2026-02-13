@@ -128,7 +128,6 @@ Diferente de `Optional`, **exclui `undefined`**. Usado quando o valor pode ser `
 - `Redis.get()` retorna `Nullable<string>` (Redis retorna `null` para chaves inexistentes, nunca `undefined`)
 - `Redis.set()` com `NX` retorna `Nullable<string>` (`"OK"` se adquiriu lock, `null` se ja existe)
 - `EntityManager.findOne()` retorna `Nullable<Entity>` quando registro pode nao existir
-- Variaveis intermediarias no `StartBeforeEndConstraint` usam `Nullable<number>` para timestamps parseados
 
 **Exemplo real no projeto:**
 

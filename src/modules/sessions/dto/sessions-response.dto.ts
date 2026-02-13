@@ -3,7 +3,7 @@
  *
  * @dto sessions-response
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { SessionStatus } from '../enums';
 
 /**
@@ -15,7 +15,6 @@ import { SessionStatus } from '../enums';
  * @see SessionsController
  * @see SessionsService
  */
-@ApiExtraModels(SessionsResponseDto)
 export class SessionsResponseDto {
   /**
    * Session unique identifier

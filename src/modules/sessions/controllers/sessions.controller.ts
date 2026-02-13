@@ -42,7 +42,7 @@ import { JwtAuthGuard, RolesGuard, Roles, UserRole } from 'src/common';
 import { SeatStatus } from 'src/modules/seats/enums';
 
 @ApiTags('sessions')
-@Controller('sessions')
+@Controller()
 export class SessionsController {
   /**
    * Constructs a SessionsController with the injected SessionsService.

@@ -3,7 +3,7 @@
  *
  * @dto seats-response
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { SeatStatus } from '../enums';
 
 /**
@@ -15,7 +15,6 @@ import { SeatStatus } from '../enums';
  * @see SeatsController
  * @see SeatsService
  */
-@ApiExtraModels(SeatsResponseDto)
 export class SeatsResponseDto {
   /**
    * Seat unique identifier.

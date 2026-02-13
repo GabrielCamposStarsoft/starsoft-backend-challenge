@@ -3,7 +3,7 @@
  *
  * @dto update-reservations
  */
-import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional } from 'class-validator';
 import { ReservationStatus } from '../enums';
 import type { Optional } from 'src/common';
@@ -23,7 +23,6 @@ import type { Optional } from 'src/common';
  * @see ReservationsController (update - se existir)
  * @see ReservationsService
  */
-@ApiExtraModels(UpdateReservationsDto)
 export class UpdateReservationsDto {
   /**
    * New reservation status (e.g. cancelled to cancel).

@@ -22,6 +22,8 @@ services:
       DATABASE_USER: postgres  # Database username (dev default).
       DATABASE_PASSWORD: postgres  # Database password (dev default).
       DATABASE_NAME: cinema  # Application DB name.
+      VALKEY_URL: redis://valkey:6379  # Use Docker service name (not localhost) from inside container.
+      RMQ_URL: amqp://guest:guest@rabbitmq:5672  # Use Docker service name for RabbitMQ.
     depends_on:
       # Ensures db, valkey, and rabbitmq are healthy before starting the API,
       # providing robust startup ordering and less brittle failures.

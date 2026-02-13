@@ -47,12 +47,14 @@ export class StartBeforeEndConstraint implements ValidatorConstraintInterface {
   }
 }
 
-export function StartBeforeEnd(validationOptions?: ValidationOptions) {
+export function StartBeforeEnd(
+  validationOptions?: Optional<ValidationOptions>,
+) {
   return function (object: object, propertyName: string): void {
     registerDecorator({
       target: object.constructor,
       propertyName,
-      options: validationOptions,
+      options: validationOptions ?? undefined,
       constraints: [],
       validator: StartBeforeEndConstraint,
     });

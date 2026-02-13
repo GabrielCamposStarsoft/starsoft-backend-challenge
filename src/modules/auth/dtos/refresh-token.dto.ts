@@ -3,7 +3,7 @@
  *
  * @dto refresh-token
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 /**
@@ -23,7 +23,6 @@ import { IsNotEmpty, IsString } from 'class-validator';
  * @see AuthController.refresh
  * @see AuthService.refresh
  */
-@ApiExtraModels(RefreshTokenDto)
 export class RefreshTokenDto {
   /**
    * Refresh token (JWT) retornado no login.

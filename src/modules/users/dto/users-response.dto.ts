@@ -3,7 +3,7 @@
  *
  * @dto users-response
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { UserRole } from 'src/common';
 
 /**
@@ -16,7 +16,6 @@ import { UserRole } from 'src/common';
  * @see AuthController.register
  * @see UsersService
  */
-@ApiExtraModels(UsersResponseDto)
 export class UsersResponseDto {
   @ApiProperty({
     description: 'User unique identifier',

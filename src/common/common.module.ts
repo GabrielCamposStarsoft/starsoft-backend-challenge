@@ -14,16 +14,8 @@ import { RedisProvider } from './providers';
 
 @Global()
 @Module({
-  providers: [
-    RedisProvider,
-    DistributedLockService,
-    IdempotencyInterceptor,
-  ],
-  exports: [
-    RedisProvider,
-    DistributedLockService,
-    IdempotencyInterceptor,
-  ],
+  providers: [RedisProvider, DistributedLockService, IdempotencyInterceptor],
+  exports: [RedisProvider, DistributedLockService, IdempotencyInterceptor],
 })
 /**
  * Global module exposing DistributedLockService and IdempotencyInterceptor.

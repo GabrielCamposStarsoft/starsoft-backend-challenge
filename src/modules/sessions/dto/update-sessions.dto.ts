@@ -1,4 +1,4 @@
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
   IsNotEmpty,
@@ -7,7 +7,7 @@ import {
   IsNumber,
   Min,
 } from 'class-validator';
-import { StartBeforeEnd } from 'src/common/validators/start-before-end.validator';
+import { type Optional, StartBeforeEnd } from 'src/common';
 
 /**
  * DTO for updating a session.
@@ -15,7 +15,6 @@ import { StartBeforeEnd } from 'src/common/validators/start-before-end.validator
  * All fields are optional (partial update / PATCH semantics).
  * Only provided fields will be updated.
  */
-@ApiExtraModels(UpdateSessionsDto)
 export class UpdateSessionsDto {
   /**
    * Title of the movie to be shown in this session.
@@ -31,7 +30,7 @@ export class UpdateSessionsDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty({ message: 'movieTitle must not be empty' })
-  movieTitle?: string;
+  movieTitle?: Optional<string>;
 
   /**
    * The name of the room/theater where the session will take place.
@@ -47,7 +46,7 @@ export class UpdateSessionsDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty({ message: 'roomName must not be empty' })
-  roomName?: string;
+  roomName?: Optional<string>;
 
   /**
    * Session start time (ISO 8601).
@@ -61,7 +60,7 @@ export class UpdateSessionsDto {
   })
   @IsOptional()
   @IsDateString()
-  startTime?: string;
+  startTime?: Optional<string>;
 
   /**
    * Session end time (ISO 8601).
@@ -76,7 +75,7 @@ export class UpdateSessionsDto {
   @IsOptional()
   @IsDateString()
   @StartBeforeEnd()
-  endTime?: string;
+  endTime?: Optional<string>;
 
   /**
    * Ticket price in BRL.
@@ -91,5 +90,5 @@ export class UpdateSessionsDto {
   @IsOptional()
   @IsNumber()
   @Min(0.01)
-  ticketPrice?: number;
+  ticketPrice?: Optional<number>;
 }

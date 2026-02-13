@@ -3,7 +3,7 @@
  *
  * @dto create-reservations
  */
-import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -30,7 +30,6 @@ import {
  * @see ReservationsController.create
  * @see ReservationsService.create
  */
-@ApiExtraModels(CreateReservationsDto)
 export class CreateReservationsDto {
   /**
    * UUID of the session in which seats will be reserved.

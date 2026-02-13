@@ -68,7 +68,11 @@ RUN npm install -g pnpm && pnpm install --frozen-lockfile --prod
 
 # Run DB migrations at container startup to ensure schema is up-to-date,
 # then start the API. All DATABASE_* env vars should be supplied by docker-compose.
-ENTRYPOINT ["sh", "-c", "node ./node_modules/typeorm/cli.js migration:run -d ./dist/data-source.js && exec \"$@\"", "sh"]
+ENTRYPOINT ["sh", "-c", "\
+node ./node_modules/typeorm/cli.js migration:run -d ./dist/data-source.js && \
+pnpm run seed && \
+exec \"$@\""]
+
 
 # Default command: launch the main server using the built outputs
 CMD ["node", "dist/main.js"]
