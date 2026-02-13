@@ -26,6 +26,8 @@ import { ROLES_KEY } from '../constants';
  * @Roles(UserRole.ADMIN)
  * adminOnly() { return 'admin'; }
  */
-export const Roles = (
+export const Roles: (
+  ...roles: Array<UserRole>
+) => MethodDecorator & ClassDecorator = (
   ...roles: Array<UserRole>
 ): MethodDecorator & ClassDecorator => SetMetadata(ROLES_KEY, roles);

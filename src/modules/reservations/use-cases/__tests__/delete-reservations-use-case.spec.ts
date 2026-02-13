@@ -144,5 +144,47 @@ describe('DeleteReservationsUseCase', () => {
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(ConflictException);
     });
+
+    it('should throw ConflictException when reservation is EXPIRED', async () => {
+      // Arrange
+      const expiredReservation = {
+        ...mockPendingReservation,
+        status: ReservationStatus.EXPIRED,
+      };
+      const mockManager = {
+        findOne: jest.fn().mockResolvedValue(expiredReservation),
+      };
+
+      dataSource.transaction.mockImplementation(
+        (cb: (mgr: EntityManager) => Promise<unknown>) =>
+          cb(mockManager as unknown as EntityManager),
+      );
+
+      const input = { id: 'res-1', userId: 'user-1' };
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw ConflictException when reservation is CANCELLED', async () => {
+      // Arrange
+      const cancelledReservation = {
+        ...mockPendingReservation,
+        status: ReservationStatus.CANCELLED,
+      };
+      const mockManager = {
+        findOne: jest.fn().mockResolvedValue(cancelledReservation),
+      };
+
+      dataSource.transaction.mockImplementation(
+        (cb: (mgr: EntityManager) => Promise<unknown>) =>
+          cb(mockManager as unknown as EntityManager),
+      );
+
+      const input = { id: 'res-1', userId: 'user-1' };
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(ConflictException);
+    });
   });
 });

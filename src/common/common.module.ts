@@ -9,9 +9,7 @@
 
 import { Global, Module } from '@nestjs/common';
 import { DistributedLockService } from './services';
-import { DistributedLockInterceptor } from './interceptors/distributed-lock.interceptor';
 import { IdempotencyInterceptor } from './interceptors/idempotency.interceptor';
-import { LogExecutionInterceptor } from './interceptors/log-execution.interceptor';
 import { RedisProvider } from './providers';
 
 @Global()
@@ -19,17 +17,19 @@ import { RedisProvider } from './providers';
   providers: [
     RedisProvider,
     DistributedLockService,
-    DistributedLockInterceptor,
-    LogExecutionInterceptor,
     IdempotencyInterceptor,
   ],
-  exports: [RedisProvider, DistributedLockService, IdempotencyInterceptor],
+  exports: [
+    RedisProvider,
+    DistributedLockService,
+    IdempotencyInterceptor,
+  ],
 })
 /**
- * Global module exposing DistributedLockService and interceptors.
+ * Global module exposing DistributedLockService and IdempotencyInterceptor.
  *
- * @description Exports DistributedLockService for use in controllers/services
- * that need Redis-backed locks. Interceptors are registered as providers
- * for use with @UseInterceptors.
+ * @description Exports DistributedLockService for use in schedulers
+ * that need Redis-backed locks. IdempotencyInterceptor is registered
+ * for use with @UseInterceptors on HTTP handlers.
  */
 export class CommonModule {}

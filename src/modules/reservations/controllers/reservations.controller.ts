@@ -15,6 +15,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -32,6 +33,7 @@ import {
   CreateReservationsDto,
   FindAllReservationsDto,
   ReservationsResponseDto,
+  UpdateReservationsDto,
 } from '../dto';
 import { ReservationsService } from '../services';
 import {
@@ -40,6 +42,8 @@ import {
   RolesGuard,
   CurrentUser,
   type IRequestUser,
+  Roles,
+  UserRole,
 } from 'src/common';
 import type { IFindAllReservationsResponse } from '../interfaces';
 @ApiTags('reservations')
@@ -172,5 +176,40 @@ export class ReservationsController {
     @CurrentUser() user: IRequestUser,
   ): Promise<void> {
     return this.reservationsService.remove(id, user.id);
+  }
+
+  /**
+   * Update a reservation by ID.
+   * Only admins are allowed to update reservations.
+   *
+   * @param {string} id - Reservation ID.
+   * @param {UpdateReservationsDto} updateDto - DTO containing fields to update.
+   * @param {IRequestUser} user - The currently authenticated user.
+   * @returns {Promise<ReservationsResponseDto>} The updated reservation DTO.
+   */
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a reservation' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'The reservation has been successfully updated.',
+    type: ReservationsResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Reservation not found.',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'You can only modify your own reservations.',
+  })
+  public update(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateReservationsDto,
+    @CurrentUser() user: IRequestUser,
+  ): Promise<ReservationsResponseDto> {
+    return this.reservationsService.update(id, updateDto, user.id);
   }
 }

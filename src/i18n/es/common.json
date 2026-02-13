@@ -29,6 +29,7 @@
     "notPending": "La reserva {id} no está pendiente",
     "expired": "La reserva {id} ha expirado",
     "cannotDeleteConfirmed": "No es posible eliminar una reserva confirmada (ya vendida)",
+    "cannotDeleteNonPending": "No se puede eliminar una reserva que no está pendiente (confirmada, expirada o cancelada)",
     "invalidTransition": "No se puede pasar de '{from}' a '{to}'",
     "ownOnly": "Solo puedes modificar tus propias reservas"
   },
@@ -48,7 +49,10 @@
     "notFound": "Sesión no encontrada",
     "notFoundWithId": "Sesión {id} no encontrada",
     "finished": "Sesión finalizada",
-    "notActive": "No se puede reservar asientos para una sesión que no está activa"
+    "notActive": "No se puede reservar asientos para una sesión que no está activa",
+    "cannotDeleteWithSales": "No se puede eliminar la sesión {id}: tiene {count} venta(s) confirmada(s). Elimine o reembolse las ventas primero.",
+    "roomScheduleConflict": "La sala {room} ya está en uso por otra sesión en este horario. Elija otra sala u horario.",
+    "minSeatsRequired": "La sesión debe tener al menos {min} asientos para aceptar reservas. Actual: {count}."
   },
   "user": {
     "notFound": "Usuario {id} no encontrado",

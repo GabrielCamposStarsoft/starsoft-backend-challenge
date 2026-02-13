@@ -28,13 +28,13 @@ import { IUseCase } from 'src/common';
  * @classdesc Use case for deleting a reservation.
  *
  * - Ensures reservation exists and belongs to the user.
- * - Forbids deleting confirmed reservations.
+ * - Forbids deleting non-pending reservations (confirmed, expired, or cancelled).
  * - If reservation is pending, releases the seat and inserts a reservation expiration outbox event.
  * - Deletes the reservation from the database.
  *
  * @throws {NotFoundException} If reservation is not found.
  * @throws {ForbiddenException} If user is not the reservation owner.
- * @throws {ConflictException} If attempting to delete a confirmed reservation.
+ * @throws {ConflictException} If attempting to delete a non-pending reservation.
  */
 @Injectable()
 export class DeleteReservationsUseCase implements IUseCase<
@@ -67,7 +67,7 @@ export class DeleteReservationsUseCase implements IUseCase<
    * @returns {Promise<void>} Resolves when the reservation is deleted.
    * @throws {NotFoundException} If reservation not found.
    * @throws {ForbiddenException} If reservation does not belong to user.
-   * @throws {ConflictException} If reservation is already confirmed.
+   * @throws {ConflictException} If reservation is not pending.
    */
   public async execute(input: IDeleteReservationsInput): Promise<void> {
     const { id, userId }: IDeleteReservationsInput = input;
@@ -90,10 +90,10 @@ export class DeleteReservationsUseCase implements IUseCase<
         throw new ForbiddenException(this.i18n.t('common.reservation.ownOnly'));
       }
 
-      // Prevent deletion of confirmed reservation.
-      if (reservation.status === ReservationStatus.CONFIRMED) {
+      // Only pending reservations can be deleted. Block CONFIRMED, EXPIRED, and CANCELLED.
+      if (reservation.status !== ReservationStatus.PENDING) {
         throw new ConflictException(
-          this.i18n.t('common.reservation.cannotDeleteConfirmed'),
+          this.i18n.t('common.reservation.cannotDeleteNonPending'),
         );
       }
 

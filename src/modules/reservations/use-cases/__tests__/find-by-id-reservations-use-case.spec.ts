@@ -66,12 +66,12 @@ describe('FindByIdReservationUseCase', () => {
       reservationsRepository.findOne.mockResolvedValue(mockReservation);
 
       // Act
-      const result = await useCase.execute({ id: 'res-1' });
+      const result = await useCase.execute({ id: 'res-1', userId: 'user-1' });
 
       // Assert
       expect(result).toEqual(mockReservation);
       expect(reservationsRepository.findOne).toHaveBeenCalledWith({
-        where: { id: 'res-1' },
+        where: { id: 'res-1', userId: 'user-1' },
       });
     });
 
@@ -81,7 +81,7 @@ describe('FindByIdReservationUseCase', () => {
       i18nService.t.mockReturnValue('Reservation not found');
 
       // Act & Assert
-      await expect(useCase.execute({ id: 'non-existent' })).rejects.toThrow(
+      await expect(useCase.execute({ id: 'non-existent', userId: 'user-1' })).rejects.toThrow(
         NotFoundException,
       );
 

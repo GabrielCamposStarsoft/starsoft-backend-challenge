@@ -18,4 +18,10 @@ export enum SeatStatus {
 
   /** Seat has been sold. */
   SOLD = 'sold',
+
+  /** Seat blocked by admin (e.g. reserved for VIP). */
+  BLOCKED = 'blocked',
+
+  /** Seat under maintenance; not available for booking. */
+  MAINTENANCE = 'maintenance',
 }

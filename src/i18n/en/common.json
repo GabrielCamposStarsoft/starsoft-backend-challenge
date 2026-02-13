@@ -29,6 +29,7 @@
     "notPending": "Reservation {id} is not pending",
     "expired": "Reservation {id} has expired",
     "cannotDeleteConfirmed": "Cannot delete a confirmed reservation (already sold)",
+    "cannotDeleteNonPending": "Cannot delete a reservation that is not pending (confirmed, expired, or cancelled)",
     "invalidTransition": "Cannot transition from '{from}' to '{to}'",
     "ownOnly": "You can only modify your own reservations"
   },
@@ -48,7 +49,10 @@
     "notFound": "Session not found",
     "notFoundWithId": "Session {id} not found",
     "finished": "Session ended",
-    "notActive": "Cannot reserve seats for a session that is not active"
+    "notActive": "Cannot reserve seats for a session that is not active",
+    "cannotDeleteWithSales": "Cannot delete session {id}: it has {count} confirmed sale(s). Remove or refund sales first.",
+    "roomScheduleConflict": "Room {room} is already in use for another session in this time slot. Choose a different room or time.",
+    "minSeatsRequired": "Session must have at least {min} seats to accept reservations. Current: {count}."
   },
   "user": {
     "notFound": "User {id} not found",

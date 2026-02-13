@@ -1,10 +1,6 @@
 /**
- * @fileoverview Seat entity (TypeORM).
- *
- * Represents a seat within a session, identified by a label (e.g., "A1") and status.
- * Implements optimistic locking with a version column.
- *
- * @entity seat-entity
+ * @fileoverview SeatEntity (TypeORM ORM entity).
+ * @module entities/SeatEntity
  */
 
 import {
@@ -16,21 +12,29 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
-  VersionColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { SessionEntity } from '../../sessions/entities';
 import { SeatStatus } from '../enums';
 
 /**
- * Represents a seat in a session.
- * Each seat has a unique label and status (available, reserved, sold).
+ * @class SeatEntity
+ * @classdesc Represents a seat in a session, each identified by a unique label and status.
+ *
+ * @property {string} id - Unique identifier of the seat (UUID).
+ * @property {string} sessionId - The session this seat belongs to.
+ * @property {SessionEntity} session - The related Session entity instance.
+ * @property {string} label - The seat label (unique per session), e.g. "A1".
+ * @property {SeatStatus} status - The seat's current status ("available", "reserved", "sold").
+ * @property {number} version - Entity version (optimistic locking, default 0).
+ * @property {Date} createdAt - Creation timestamp.
+ * @property {Date} updatedAt - Last update timestamp.
  */
 @Entity('seats')
 @Index('idx_seats_session_label', ['sessionId', 'label'], { unique: true })
 export class SeatEntity {
   /**
-   * Unique identifier of the seat.
+   * Unique identifier of the seat (UUID).
    * @type {string}
    * @example "123e4567-e89b-12d3-a456-426614174000"
    */
@@ -65,8 +69,7 @@ export class SeatEntity {
   session: SessionEntity;
 
   /**
-   * Seat label within the session.
-   * Unique per session (e.g., "A1", "A2").
+   * Seat label within the session. Unique per session (e.g., "A1").
    * @type {string}
    * @example "A1"
    */
@@ -76,7 +79,7 @@ export class SeatEntity {
 
   /**
    * Current status of the seat.
-   * One of: "available", "reserved", or "sold".
+   * One of SeatStatus ("available", "reserved", "sold").
    * @type {SeatStatus}
    */
   @ApiProperty({ description: 'Seat status', enum: SeatStatus })
@@ -96,13 +99,12 @@ export class SeatEntity {
     description: 'Entity version for optimistic locking',
     example: 0,
   })
-  @VersionColumn({ type: 'int', default: 0 })
+  @Column({ type: 'int', default: 0 })
   version: number;
 
   /**
    * Creation timestamp of the seat entity.
    * @type {Date}
-   * @format date-time
    */
   @ApiProperty({
     description: 'Creation date',
@@ -118,7 +120,6 @@ export class SeatEntity {
   /**
    * Last update timestamp of the seat entity.
    * @type {Date}
-   * @format date-time
    */
   @ApiProperty({
     description: 'Last update date',

@@ -14,6 +14,7 @@ import { CreateReservationsUseCase } from '../create-reservations.use-case';
 
 interface IMockManager {
   findOne: jest.Mock;
+  count: jest.Mock;
   createQueryBuilder: jest.Mock;
   create: jest.Mock;
   save: jest.Mock;
@@ -49,6 +50,7 @@ describe('CreateReservationsUseCase', () => {
     };
     return {
       findOne: jest.fn(),
+      count: jest.fn().mockResolvedValue(20),
       createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
       create: jest.fn().mockImplementation((_: unknown, data: object) => ({
         ...data,
@@ -120,6 +122,28 @@ describe('CreateReservationsUseCase', () => {
       expect(dataSource.transaction).toHaveBeenCalledTimes(1);
     });
 
+    it('should throw BadRequestException when session has fewer than 16 seats', async () => {
+      // Arrange
+      dataSource.transaction.mockImplementation(
+        (cb: (mgr: EntityManager) => Promise<unknown>) => {
+          const mockManager = {
+            findOne: jest.fn().mockResolvedValueOnce(mockSession),
+            count: jest.fn().mockResolvedValue(10),
+          };
+          return cb(mockManager as unknown as EntityManager);
+        },
+      );
+
+      const input = {
+        sessionId: 'session-1',
+        seatIds: ['seat-1'],
+        userId: 'user-1',
+      };
+
+      // Act & Assert
+      await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
+    });
+
     it('should throw NotFoundException when session does not exist', async () => {
       // Arrange
       dataSource.transaction.mockImplementation(
@@ -154,6 +178,7 @@ describe('CreateReservationsUseCase', () => {
               .fn()
               .mockResolvedValueOnce(inactiveSession)
               .mockResolvedValueOnce(mockUser),
+            count: jest.fn().mockResolvedValue(20),
           };
           return cb(mockManager as unknown as EntityManager);
         },
@@ -178,6 +203,7 @@ describe('CreateReservationsUseCase', () => {
               .fn()
               .mockResolvedValueOnce(mockSession)
               .mockResolvedValueOnce(null),
+            count: jest.fn().mockResolvedValue(20),
           };
           return cb(mockManager as unknown as EntityManager);
         },
@@ -204,6 +230,7 @@ describe('CreateReservationsUseCase', () => {
               .mockResolvedValueOnce(mockSession)
               .mockResolvedValueOnce(mockUser)
               .mockResolvedValueOnce(seatInSession),
+            count: jest.fn().mockResolvedValue(20),
             createQueryBuilder: jest.fn().mockReturnValue({
               update: jest.fn().mockReturnThis(),
               set: jest.fn().mockReturnThis(),
@@ -240,6 +267,7 @@ describe('CreateReservationsUseCase', () => {
               .mockResolvedValueOnce(mockSession)
               .mockResolvedValueOnce(mockUser)
               .mockResolvedValueOnce(seatInOtherSession),
+            count: jest.fn().mockResolvedValue(20),
             createQueryBuilder: jest.fn().mockReturnValue({
               update: jest.fn().mockReturnThis(),
               set: jest.fn().mockReturnThis(),
@@ -272,6 +300,7 @@ describe('CreateReservationsUseCase', () => {
               .mockResolvedValueOnce(mockSession)
               .mockResolvedValueOnce(mockUser)
               .mockResolvedValueOnce(null),
+            count: jest.fn().mockResolvedValue(20),
             createQueryBuilder: jest.fn().mockReturnValue({
               update: jest.fn().mockReturnThis(),
               set: jest.fn().mockReturnThis(),

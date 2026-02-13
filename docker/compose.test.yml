@@ -1,0 +1,53 @@
+# -----------------------------------------------------------------------------
+# docker-compose.test.yml - Test infrastructure for integration, e2e, concurrency,
+# and messaging tests. Uses REAL PostgreSQL, Redis (Valkey), and RabbitMQ.
+#
+# Usage:
+#   docker compose -f docker/compose.test.yml up -d
+#   # Wait for services to be healthy, then run tests
+#   pnpm test:integration
+#   pnpm test:e2e
+#   pnpm test:concurrency
+#   pnpm test:messaging
+#
+# Services listen on localhost to avoid port conflicts with dev compose.
+# -----------------------------------------------------------------------------
+
+services:
+  db-test:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cinema_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  valkey-test:
+    image: valkey/valkey:9.0.2
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq-test:
+    image: rabbitmq:4.2.3-management
+    ports:
+      - "5673:5672"
+      - 15673:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 10

@@ -16,28 +16,16 @@ import {
   ServiceUnavailableException,
   Inject,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { Observable, of } from 'rxjs';
 import { catchError, concatMap } from 'rxjs/operators';
-import type { Nullable, Optional, Either } from '../types';
+import type { Nullable, Optional } from '../types';
+import { sleep } from '../utils';
 
 const RESPONSE_TTL_MS: number = 300_000; // 5 min
 const LOCK_TTL_MS: number = 300_000; // 5 min (lock expires if handler hangs/crashes)
 const POLL_INTERVAL_MS: number = 50;
 const POLL_TIMEOUT_MS: number = 305_000; // Slightly longer than lock TTL
-
-/**
- * Async sleep for polling without busy-waiting.
- *
- * @param ms - Milliseconds to sleep
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise(
-    (resolve: (value: Either<void, PromiseLike<void>>) => void) =>
-      setTimeout(resolve, ms),
-  );
-}
 
 /**
  * Interceptor that implements idempotency for HTTP requests based on the presence of an
@@ -60,12 +48,9 @@ export class IdempotencyInterceptor implements NestInterceptor {
   /**
    * Creates an instance of the IdempotencyInterceptor.
    *
-   * @param config - ConfigService for VALKEY_URL to connect to Redis.
+   * @param redis - Injected Redis client for lock and cache operations.
    */
-  constructor(
-    private readonly config: ConfigService,
-    @Inject('REDIS') private readonly redis: Redis,
-  ) {}
+  constructor(@Inject('REDIS') private readonly redis: Redis) {}
 
   /**
    * Intercepts incoming HTTP requests, enforcing idempotency based on the "idempotency-key" header.

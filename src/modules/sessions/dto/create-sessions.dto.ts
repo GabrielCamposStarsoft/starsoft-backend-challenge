@@ -11,6 +11,7 @@ import {
   IsDateString,
   Min,
 } from 'class-validator';
+import { StartBeforeEnd } from 'src/common/validators/start-before-end.validator';
 
 /**
  * DTO for creating a cinema session (movie, room, schedule, price).
@@ -86,6 +87,7 @@ export class CreateSessionsDto {
   })
   @IsDateString()
   @IsNotEmpty()
+  @StartBeforeEnd()
   endTime: string;
 
   /**

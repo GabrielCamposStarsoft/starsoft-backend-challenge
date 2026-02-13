@@ -11,7 +11,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { I18nService } from 'nestjs-i18n';
-import type { IUseCase, Nullable } from 'src/common';
+import {
+  MIN_SEATS_PER_SESSION,
+  type IUseCase,
+  type Nullable,
+} from 'src/common';
 import { DataSource, EntityManager, UpdateResult } from 'typeorm';
 import { SeatEntity } from '../../seats/entities';
 import { SeatStatus } from '../../seats/enums';
@@ -99,6 +103,20 @@ export class CreateReservationsUseCase implements IUseCase<
       }
       if (session.status !== SessionStatus.ACTIVE) {
         throw new BadRequestException(this.i18n.t('common.session.notActive'));
+      }
+
+      /**
+       * Validate session has minimum required seats (business rule: min 16).
+       */
+      const seatCount: number = await manager.count(SeatEntity, {
+        where: { sessionId },
+      });
+      if (seatCount < MIN_SEATS_PER_SESSION) {
+        throw new BadRequestException(
+          this.i18n.t('common.session.minSeatsRequired', {
+            args: { min: MIN_SEATS_PER_SESSION, count: seatCount },
+          }),
+        );
       }
 
       /**

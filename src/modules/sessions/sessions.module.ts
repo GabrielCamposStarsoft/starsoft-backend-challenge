@@ -11,12 +11,13 @@ import { Module } from '@nestjs/common';
 import { SessionsController } from './controllers';
 import { SessionsService } from './services';
 import { SessionsUseCases } from './use-cases';
+import { SaleEntity } from '../sales/entities';
 import { SessionEntity } from './entities';
 import { SeatEntity } from '../seats/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SessionEntity, SeatEntity])],
+  imports: [TypeOrmModule.forFeature([SessionEntity, SeatEntity, SaleEntity])],
   controllers: [SessionsController],
   providers: [SessionsService, ...SessionsUseCases],
   exports: [SessionsService],

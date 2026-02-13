@@ -43,6 +43,10 @@ export class DistributedLockService implements OnModuleDestroy {
    * @param {Redis} redis - Injected Redis client.
    */
   constructor(@Inject('REDIS') private readonly redis: Redis) {
+    /**
+     * Initialize Redlock with the Redis client.
+     * @type {Redlock}
+     */
     this.redlock = new Redlock(
       [this.redis as unknown as CompatibleRedisClient],
       {

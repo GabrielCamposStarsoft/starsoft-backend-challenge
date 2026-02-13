@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Scheduler for periodically expiring reservations.
+ * Uses a distributed lock to ensure a single instance runs at a time.
+ */
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DistributedLockService } from 'src/common';
@@ -49,22 +53,32 @@ export class ReservationsExpirationScheduler {
    */
   @Cron(CronExpression.EVERY_10_SECONDS)
   public async handleExpiration(): Promise<void> {
-    // Acquire distributed lock before proceeding.
+    /**
+     * Acquire distributed lock before proceeding.
+     * @type {boolean}
+     */
     const isAcquired: boolean = await this.lockService.acquire(
       LOCK_KEY,
       LOCK_TTL_SECONDS,
     );
 
-    // Skip if unable to acquire lock (another instance is running).
+    /**
+     * Skip if unable to acquire lock (another instance is running).
+     * @type {boolean}
+     */
     if (!isAcquired) {
       return;
     }
 
     try {
-      // Run the use case logic to expire reservations and release seats.
+      /**
+       * Run the use case logic to expire reservations and release seats.
+       */
       await this.expireReservationsUseCase.execute();
     } finally {
-      // Always release the distributed lock afterwards.
+      /**
+       * Always release the distributed lock afterwards.
+       */
       await this.lockService.release(LOCK_KEY);
     }
   }

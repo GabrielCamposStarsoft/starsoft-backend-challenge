@@ -80,6 +80,7 @@ describe('CreateUsersUseCase', () => {
         username: 'johndoe',
         email: 'john@example.com',
         password: 'plainPassword',
+        role: undefined,
       };
 
       // Act
@@ -144,6 +145,7 @@ describe('CreateUsersUseCase', () => {
         username: 'johndoe',
         email: 'john@example.com',
         password: 'plainPassword',
+        role: undefined,
       };
 
       // Act & Assert

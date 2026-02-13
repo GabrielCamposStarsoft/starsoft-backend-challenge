@@ -17,7 +17,9 @@
       "Bash(npx eslint:*)",
       "Bash(pnpm build:*)",
       "Bash(npx jest:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(pnpm run build:*)",
+      "Bash(sudo rm:*)"
     ]
   }
 }
