@@ -17,7 +17,6 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
  *  - expires_at: Timestamp with time zone, when reservation is considered expired, not null.
  *  - created_at: Timestamp with time zone, record creation date, defaults to now.
  *  - updated_at: Timestamp with time zone, last update date, defaults to now.
- *  - version: Integer, version for optimistic locking, defaults to 0.
  * Constraints:
  *  - PK: id
  *  - FK: session_id -> sessions(id), ON DELETE CASCADE
@@ -43,7 +42,6 @@ export class CreateReservations1770759971722 implements MigrationInterface {
         "expires_at" TIMESTAMP WITH TIME ZONE NOT NULL,
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        "version" integer NOT NULL DEFAULT 0,
         CONSTRAINT "PK_reservations" PRIMARY KEY ("id"),
         CONSTRAINT "FK_reservations_session" FOREIGN KEY ("session_id")
           REFERENCES "sessions"("id") ON DELETE CASCADE,
