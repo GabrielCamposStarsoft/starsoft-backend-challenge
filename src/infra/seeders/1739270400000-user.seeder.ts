@@ -7,7 +7,7 @@
  * @seeder user-seeder
  */
 
-import type { DataSource } from 'typeorm';
+import type { DataSource, Repository } from 'typeorm';
 import type { Seeder, SeederFactoryManager } from 'typeorm-extension';
 import * as argon2 from 'argon2';
 import { UserEntity } from '../../modules/users/entities';
@@ -29,10 +29,10 @@ export class UserSeeder1739270400000 implements Seeder {
     dataSource: DataSource,
     _factoryManager: SeederFactoryManager,
   ): Promise<void> {
-    const repo = dataSource.getRepository(UserEntity);
-    const password = await argon2.hash('Password1!');
+    const repo: Repository<UserEntity> = dataSource.getRepository(UserEntity);
+    const password: string = await argon2.hash('Password1!');
 
-    const users = [
+    const users: Array<Pick<UserEntity, 'username' | 'email' | 'role'>> = [
       { username: 'alice', email: 'alice@example.com', role: UserRole.ADMIN },
       { username: 'bob', email: 'bob@example.com', role: UserRole.USER },
       { username: 'carol', email: 'carol@example.com', role: UserRole.USER },
@@ -44,6 +44,11 @@ export class UserSeeder1739270400000 implements Seeder {
       { username: 'iris', email: 'iris@example.com', role: UserRole.USER },
       { username: 'jack', email: 'jack@example.com', role: UserRole.USER },
     ];
-    await repo.insert(users.map((u) => ({ ...u, password })));
+    await repo.insert(
+      users.map((u: Pick<UserEntity, 'username' | 'email' | 'role'>) => ({
+        ...u,
+        password,
+      })),
+    );
   }
 }

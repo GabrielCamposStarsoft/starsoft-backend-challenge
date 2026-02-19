@@ -6,7 +6,7 @@
  * @seeder session-seeder
  */
 
-import type { DataSource } from 'typeorm';
+import type { DataSource, Repository } from 'typeorm';
 import type { Seeder, SeederFactoryManager } from 'typeorm-extension';
 import { SessionEntity } from '../../modules/sessions/entities';
 import { SessionStatus } from '../../modules/sessions/enums';
@@ -25,9 +25,12 @@ export class SessionSeeder1739270400001 implements Seeder {
     dataSource: DataSource,
     _factoryManager: SeederFactoryManager,
   ): Promise<void> {
-    const repo = dataSource.getRepository(SessionEntity);
-    const now = new Date();
-    const sessions = [
+    const repo: Repository<SessionEntity> =
+      dataSource.getRepository(SessionEntity);
+    const now: Date = new Date();
+    const sessions: Array<
+      Pick<SessionEntity, 'movieTitle' | 'roomName' | 'ticketPrice'>
+    > = [
       { movieTitle: 'Inception', roomName: 'Room 1', ticketPrice: 25.5 },
       { movieTitle: 'The Matrix', roomName: 'Room 2', ticketPrice: 22.0 },
       { movieTitle: 'Interstellar', roomName: 'Room 1', ticketPrice: 28.0 },
@@ -39,21 +42,36 @@ export class SessionSeeder1739270400001 implements Seeder {
       { movieTitle: 'Forrest Gump', roomName: 'Room 1', ticketPrice: 23.0 },
       { movieTitle: 'Fight Club', roomName: 'Room 2', ticketPrice: 25.0 },
     ];
-    const rows = sessions.map((s, i) => {
-      const start = new Date(now);
-      start.setDate(start.getDate() + i);
-      start.setHours(19 + (i % 3), 0, 0, 0);
-      const end = new Date(start);
-      end.setHours(end.getHours() + 2, 30, 0, 0);
-      return {
-        movieTitle: s.movieTitle,
-        roomName: s.roomName,
-        startTime: start,
-        endTime: end,
-        ticketPrice: s.ticketPrice,
-        status: SessionStatus.ACTIVE,
-      };
-    });
+    const rows: Array<
+      Pick<
+        SessionEntity,
+        | 'movieTitle'
+        | 'roomName'
+        | 'ticketPrice'
+        | 'startTime'
+        | 'endTime'
+        | 'status'
+      >
+    > = sessions.map(
+      (
+        s: Pick<SessionEntity, 'movieTitle' | 'roomName' | 'ticketPrice'>,
+        i: number,
+      ) => {
+        const start: Date = new Date(now);
+        start.setDate(start.getDate() + i);
+        start.setHours(19 + (i % 3), 0, 0, 0);
+        const end = new Date(start);
+        end.setHours(end.getHours() + 2, 30, 0, 0);
+        return {
+          movieTitle: s.movieTitle,
+          roomName: s.roomName,
+          startTime: start,
+          endTime: end,
+          ticketPrice: s.ticketPrice,
+          status: SessionStatus.ACTIVE,
+        };
+      },
+    );
     await repo.insert(rows);
   }
 }

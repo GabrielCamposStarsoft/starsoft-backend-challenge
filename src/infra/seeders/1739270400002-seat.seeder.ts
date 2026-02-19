@@ -30,7 +30,9 @@ export class SeatSeeder1739270400002 implements Seeder {
       dataSource.getRepository(SessionEntity);
     const seatRepo: Repository<SeatEntity> =
       dataSource.getRepository(SeatEntity);
-    const [firstSession] = await sessionRepo.find({ take: 1 });
+    const [firstSession]: Array<SessionEntity> = await sessionRepo.find({
+      take: 1,
+    });
     if (firstSession == null) return;
 
     const labels: Array<string> = [

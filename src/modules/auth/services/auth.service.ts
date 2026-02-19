@@ -22,6 +22,7 @@ import {
   ValidateUserUseCase,
 } from '../use-cases';
 import type { ISignAccessTokenResponse } from '../interfaces';
+import { UsersResponseDto } from 'src/modules/users/dto';
 /**
  * Orchestrates authentication and authorization operations.
  *
@@ -60,7 +61,7 @@ export class AuthService {
    * @returns ILoginResponse with accessToken, refreshToken, and expiresIn.
    */
   public async register(dto: RegisterDto): Promise<ILoginResponse> {
-    const user = await this.registerAuthUseCase.execute(dto);
+    const user: UsersResponseDto = await this.registerAuthUseCase.execute(dto);
     const { accessToken, expiresIn }: ISignAccessTokenResponse =
       this.signAccessTokenUseCase.execute({
         userId: user.id,

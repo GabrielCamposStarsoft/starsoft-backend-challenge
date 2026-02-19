@@ -38,19 +38,24 @@ export class ReservationSeeder1739270400003 implements Seeder {
     const reservationRepo: Repository<ReservationEntity> =
       dataSource.getRepository(ReservationEntity);
 
-    const users = await userRepo.find({ take: 10 });
-    const [session] = await sessionRepo.find({ take: 1 });
-    const seats = await seatRepo.find({
+    const users: Array<UserEntity> = await userRepo.find({ take: 10 });
+    const [session]: Array<SessionEntity> = await sessionRepo.find({ take: 1 });
+    const seats: Array<SeatEntity> = await seatRepo.find({
       where: { sessionId: session?.id, status: SeatStatus.AVAILABLE },
       take: 10,
     });
 
     if (session == null || seats.length < 10) return;
 
-    const expiresAt = new Date();
+    const expiresAt: Date = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 30);
 
-    const reservations = seats.slice(0, 10).map((seat, i) => ({
+    const reservations: Array<
+      Pick<
+        ReservationEntity,
+        'sessionId' | 'seatId' | 'userId' | 'status' | 'expiresAt'
+      >
+    > = seats.slice(0, 10).map((seat: SeatEntity, i: number) => ({
       sessionId: session.id,
       seatId: seat.id,
       userId: users[i]?.id ?? users[0].id,

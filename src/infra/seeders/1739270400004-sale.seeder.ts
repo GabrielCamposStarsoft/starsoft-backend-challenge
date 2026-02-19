@@ -77,7 +77,12 @@ export class SaleSeeder1739270400004 implements Seeder {
     );
     const ticketPrice: number = Number(sessionWithPrice?.ticketPrice ?? 25);
 
-    const sales = savedReservations.map((reservation: ReservationEntity) => ({
+    const sales: Array<
+      Pick<
+        SaleEntity,
+        'reservationId' | 'sessionId' | 'seatId' | 'userId' | 'amount'
+      >
+    > = savedReservations.map((reservation: ReservationEntity) => ({
       reservationId: reservation.id,
       sessionId: session.id,
       seatId: reservation.seatId,
