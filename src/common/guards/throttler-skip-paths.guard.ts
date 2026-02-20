@@ -45,9 +45,9 @@ export class ThrottlerSkipPathsGuard
       .switchToHttp()
       .getRequest<IRequestWithUrl>();
 
-    const path = (request.url ?? '').split('?')[0];
-    const shouldSkipPath = SKIP_PATHS.some(
-      (skip) => path === skip || path.startsWith(`${skip}/`),
+    const path: string = (request.url ?? '').split('?')[0];
+    const shouldSkipPath: boolean = SKIP_PATHS.some(
+      (skip: string) => path === skip || path.startsWith(`${skip}/`),
     );
     return shouldSkipPath;
   }

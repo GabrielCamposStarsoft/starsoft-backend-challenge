@@ -59,7 +59,7 @@ export class JwtAuthGuard
    */
   public override handleRequest<TUser = IRequestUser>(
     err: Nullable<Error>,
-    user: TUser | false,
+    user: Either<TUser, false>,
     _info: Nullable<Error>,
   ): TUser {
     if (err) {

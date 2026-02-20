@@ -8,6 +8,7 @@
  * @provider common/providers/redis.provider
  */
 
+import type { Provider } from '@nestjs/common';
 import Redis from 'ioredis';
 
 /**
@@ -18,7 +19,7 @@ import Redis from 'ioredis';
  *
  * @constant
  */
-export const RedisProvider = {
+export const RedisProvider: Provider<Redis> = {
   provide: 'REDIS',
   /**
    * Factory function to create a Redis instance.
