@@ -406,6 +406,39 @@ const sortedSeatIds: Array<string> = [...seatIds].sort();
 
 **Por que?** Multiplas transacoes que bloqueiam os mesmos assentos em **ordem diferente** podem entrar em deadlock (espera circular). Com `.sort()`, todas seguem a mesma sequencia e nao ha ciclo.
 
+### Conflito de sala: defesa em duas camadas
+
+O `CreateSessionsUseCase` e o `UpdateSessionUseCase` combinam duas estrategias para impedir sessoes sobrepostas na mesma sala:
+
+**Camada 1 — Check em memoria (caminho rapido):**
+
+```typescript
+const others = await sessionsRepository.find({ where: { roomName } });
+const hasConflict = others.some((s) => overlaps(startTime, endTime, s.startTime, s.endTime));
+if (hasConflict) throw new ConflictException(...);
+```
+
+Retorna um erro legivel antes mesmo de tentar inserir. Cobre 99% dos casos.
+
+**Camada 2 — Constraint no banco (safety net para race conditions):**
+
+```sql
+-- Extension necessaria para usar = em indexes GiST
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+-- Constraint: nao pode haver duas sessoes na mesma sala com intervalos sobrepostos
+CONSTRAINT "sessions_no_overlap" EXCLUDE USING gist (
+  "room_name" WITH =,
+  tstzrange("start_time", "end_time") WITH &&
+)
+```
+
+Se dois admins criarem sessoes na mesma sala ao mesmo tempo, ambos podem passar pelo check em memoria antes de qualquer um commitar. O banco rejeita o segundo com o codigo de erro PostgreSQL `23P01` (exclusion constraint violation), que os use-cases capturam e convertem em `ConflictException`.
+
+**Por que `EXCLUDE USING gist` em vez de `UNIQUE`?**
+
+`UNIQUE` compara igualdade. O problema aqui e sobreposicao de intervalos (`A.start < B.end AND A.end > B.start`), um predicado nao suportado por B-Tree. O `gist` com `tstzrange(...) WITH &&` usa o operador de sobreposicao nativo do PostgreSQL, garantindo a verificacao no nivel do banco de forma eficiente, com o `btree_gist` permitindo combinar a igualdade de `room_name` com a sobreposicao de range no mesmo indice.
+
 ### Expiracao com isolamento por reserva
 
 O `ExpireReservationsUseCase` cria um `QueryRunner` **por reserva** (nao uma transacao unica para todas):
@@ -1044,6 +1077,7 @@ curl -X POST http://localhost:8088/sales \
 | **Mensagens com falha** | DLQ | `x-dead-letter-exchange` + nack sem requeue |
 | **Disponibilidade em cache** | Invalidacao por evento | Consumer invalida `seats:session:{id}` |
 | **Crescimento das tabelas de outbox** | Cleanup automatico | Scheduler a cada hora deleta registros `published/processed=true` com mais de 7 dias |
+| **Sessoes sobrepostas na mesma sala** | Defesa em duas camadas | Check em memoria (rapido) + `EXCLUDE USING gist` no banco (race condition) |
 
 ---
 
@@ -1067,14 +1101,13 @@ curl -X POST http://localhost:8088/sales \
 | **IUseCase interface** | Contrato unico para todos os use-cases, testabilidade |
 | **i18n com 3 idiomas** | Mensagens localizadas sem hardcode em use-cases |
 | **Fastify em vez de Express** | Performance superior em cenarios de alta concorrencia |
-| **Validacao de conflito de sala** | Impede sessoes sobrepostas na mesma sala |
+| **`EXCLUDE USING gist` + check em memoria para conflito de sala** | Check em memoria retorna erro rapido; constraint no banco e safety net para race conditions concorrentes |
 
 ---
 
 ## Limitacoes Conhecidas
 
-1. **Validacao de conflito de sala**: Usa SELECT + check em memoria (sem lock/constraint); em concorrencia extrema, sessoes sobrepostas podem ser criadas simultaneamente
-2. **Relay do Outbox**: Publish e update nao sao atomicos; crash entre eles pode gerar duplicacao (mitigado por dedup no consumer)
+1. **Relay do Outbox**: Publish e update nao sao atomicos; crash entre eles pode gerar duplicacao (mitigado por dedup no consumer)
 3. **Redlock com um node**: Falha do Redis pode liberar locks e permitir execucao duplicada de schedulers
 4. **Connection pool**: Sem tuning explicito; o default do TypeORM pode ser insuficiente sob carga extrema
 5. **Indices na outbox**: Queries de relay podem fazer full scan em volumes altos
@@ -1086,7 +1119,6 @@ curl -X POST http://localhost:8088/sales \
 
 ## Melhorias Futuras
 
-- Lock ou constraint na criacao de sessoes (ex: `EXCLUDE USING gist` no PostgreSQL)
 - Isolation level explicito nas transacoes criticas e documentacao da escolha
 - Retry com backoff exponencial no relay de outbox
 - Indices parciais nas tabelas de outbox para queries de relay (`WHERE published = false`)
