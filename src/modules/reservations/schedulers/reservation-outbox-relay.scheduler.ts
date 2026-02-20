@@ -59,7 +59,7 @@ export class ReservationOutboxRelayScheduler {
    */
   @Cron(CronExpression.EVERY_30_SECONDS)
   public async handleRelay(): Promise<void> {
-    const isAcquired = await this.lockService.acquire(
+    const isAcquired: boolean = await this.lockService.acquire(
       LOCK_KEY,
       LOCK_TTL_SECONDS,
     );

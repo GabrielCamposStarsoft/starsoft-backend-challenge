@@ -58,7 +58,9 @@ let tokens = {};
 
 export function setup() {
   if (!sessionId || !seatIds.length) {
-    console.warn('SESSION_ID and SEAT_IDS not set. Run setup script or set env vars.');
+    console.warn(
+      'SESSION_ID and SEAT_IDS not set. Run setup script or set env vars.',
+    );
     return { sessionId: null, seatIds: [], tokens: {} };
   }
 

@@ -48,13 +48,16 @@ export async function createTestSession(
   const startTime: Date = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   const endTime: Date = new Date(startTime.getTime() + 2 * 60 * 60 * 1000);
 
+  /** Unique room per call to avoid sessions_no_overlap constraint when tests run in parallel or share DB. */
+  const defaultRoom = `Room-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
   const [result] = await ds.query(
     `INSERT INTO sessions (movie_title, room_name, start_time, end_time, ticket_price, status)
      VALUES ($1, $2, $3, $4, $5, 'active')
      RETURNING id, movie_title, room_name, start_time, end_time, ticket_price`,
     [
       overrides?.movieTitle ?? 'Test Movie',
-      overrides?.roomName ?? 'Room A',
+      overrides?.roomName ?? defaultRoom,
       startTime,
       endTime,
       overrides?.ticketPrice ?? 25.5,

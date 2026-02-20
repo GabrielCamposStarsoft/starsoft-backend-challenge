@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import { SeatEntity } from '../entities';
 import { SeatStatus } from '../enums';
 import type { IUpdateSeatsInput } from './interfaces';
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class UpdateSeatsUseCase implements IUseCase<
@@ -19,6 +20,7 @@ export class UpdateSeatsUseCase implements IUseCase<
   constructor(
     @InjectRepository(SeatEntity)
     private readonly seatRepository: Repository<SeatEntity>,
+    private readonly i18n: I18nService,
   ) {}
 
   /**
@@ -26,17 +28,38 @@ export class UpdateSeatsUseCase implements IUseCase<
    * RESERVED and SOLD must be set via reservation/payment flow.
    */
   public async execute(input: IUpdateSeatsInput): Promise<SeatEntity> {
-    const { id, status } = input;
-
+    /**
+     * Extract the seat ID and status from the input.
+     * @type {IUpdateSeatsInput}
+     */
+    const { id, status }: IUpdateSeatsInput = input;
+    /**
+     * Attempt to find the seat by ID.
+     * @type {Nullable<SeatEntity>}
+     */
     const seat: Nullable<SeatEntity> = await this.seatRepository.findOne({
       where: { id },
     });
 
+    // Throw 404 if seat does not exist.
     if (!seat) {
-      throw new NotFoundException(`Seat with id ${id} not found`);
+      throw new NotFoundException(
+        this.i18n.t('common.seat.notFoundWithId', { args: { id } }),
+      );
     }
 
+    /**
+     * Update the seat status.
+     * @type {SeatStatus}
+     */
     seat.status = status as SeatStatus;
+
+    /**
+     * Save the updated seat.
+     * @returns {Promise<SeatEntity>}
+     *
+     * @throws {ConflictException} If the seat status is not allowed.
+     */
     return this.seatRepository.save(seat);
   }
 }

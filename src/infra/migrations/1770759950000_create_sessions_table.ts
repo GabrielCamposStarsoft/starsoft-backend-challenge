@@ -27,6 +27,7 @@ export class CreateSessions1770759950000 implements MigrationInterface {
    * @param queryRunner TypeORM QueryRunner for executing raw queries.
    */
   public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS btree_gist`);
     await queryRunner.query(`
       CREATE TABLE IF NOT EXISTS "sessions" (
         "id" uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -38,7 +39,11 @@ export class CreateSessions1770759950000 implements MigrationInterface {
         "status" character varying(20) NOT NULL DEFAULT 'active',
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-        CONSTRAINT "PK_sessions" PRIMARY KEY ("id")
+        CONSTRAINT "PK_sessions" PRIMARY KEY ("id"),
+        CONSTRAINT "sessions_no_overlap" EXCLUDE USING gist (
+          "room_name" WITH =,
+          tstzrange("start_time", "end_time") WITH &&
+        )
       )
     `);
   }
