@@ -6,7 +6,7 @@ import type { Repository } from 'typeorm';
 import { SaleEntity } from '../../entities';
 import { FindOneSalesUseCase } from '../find-one-sales.use-case';
 
-describe('FindOneSalesUseCase', () => {
+describe('FindOneSalesUseCase', (): void => {
   let useCase: FindOneSalesUseCase;
   let salesRepository: jest.Mocked<Pick<Repository<SaleEntity>, 'findOneBy'>>;
   let i18nService: jest.Mocked<Pick<I18nService, 't'>>;
@@ -21,7 +21,7 @@ describe('FindOneSalesUseCase', () => {
     createdAt: new Date(),
   } as SaleEntity;
 
-  beforeEach(async () => {
+  beforeEach(async (): Promise<void> => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindOneSalesUseCase,
@@ -45,17 +45,20 @@ describe('FindOneSalesUseCase', () => {
     i18nService = module.get(I18nService);
   });
 
-  it('should be defined', () => {
+  it('should be defined', (): void => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
+  describe('execute', (): void => {
     it('should return sale when found by id', async () => {
       // Arrange
       salesRepository.findOneBy.mockResolvedValue(mockSale);
 
       // Act
-      const result = await useCase.execute({ id: 'sale-1', userId: 'user-1' });
+      const result: SaleEntity = await useCase.execute({
+        id: 'sale-1',
+        userId: 'user-1',
+      });
 
       // Assert
       expect(result).toEqual(mockSale);

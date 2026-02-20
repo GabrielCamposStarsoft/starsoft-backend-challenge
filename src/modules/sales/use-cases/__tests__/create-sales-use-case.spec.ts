@@ -14,8 +14,10 @@ import type { SeatEntity } from '../../../seats/entities';
 import { SeatStatus } from '../../../seats/enums';
 import type { SessionEntity } from '../../../sessions/entities';
 import { CreateSalesUseCase } from '../create-sales.use-case';
+import type { SaleEntity } from '../../entities';
+import type { ICreateSalesInput } from '../interfaces';
 
-describe('CreateSalesUseCase', () => {
+describe('CreateSalesUseCase', (): void => {
   let useCase: CreateSalesUseCase;
   let mockManager: {
     findOne: jest.Mock;
@@ -26,7 +28,7 @@ describe('CreateSalesUseCase', () => {
   let i18nService: jest.Mocked<Pick<I18nService, 't'>>;
   let createQueryRunnerImpl: () => QueryRunner;
 
-  const mockReservation = {
+  const mockReservation: ReservationEntity = {
     id: 'res-1',
     userId: 'user-1',
     seatId: 'seat-1',
@@ -35,27 +37,27 @@ describe('CreateSalesUseCase', () => {
     expiresAt: new Date(Date.now() + 60000),
   } as ReservationEntity;
 
-  const mockSeat = {
+  const mockSeat: SeatEntity = {
     id: 'seat-1',
     status: SeatStatus.RESERVED,
     sessionId: 'session-1',
   } as SeatEntity;
 
-  const mockSession = {
+  const mockSession: SessionEntity = {
     id: 'session-1',
     ticketPrice: 25.5,
   } as SessionEntity;
 
-  const mockSavedSale = {
+  const mockSavedSale: SaleEntity = {
     id: 'sale-1',
     reservationId: 'res-1',
     sessionId: 'session-1',
     seatId: 'seat-1',
     userId: 'user-1',
     amount: 25.5,
-  };
+  } as SaleEntity;
 
-  beforeEach(async () => {
+  beforeEach(async (): Promise<void> => {
     mockManager = {
       findOne: jest.fn(),
       save: jest.fn(),
@@ -99,25 +101,31 @@ describe('CreateSalesUseCase', () => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
-    it('should create sale when reservation is valid', async () => {
+  describe('execute', (): void => {
+    it('should create sale when reservation is valid', async (): Promise<void> => {
       // Arrange
       mockManager.findOne
         .mockResolvedValueOnce(mockReservation)
         .mockResolvedValueOnce(mockSeat)
         .mockResolvedValueOnce(mockSession);
-      mockManager.create.mockImplementation((_: unknown, data: object) => ({
-        ...data,
-      }));
+      mockManager.create.mockImplementation(
+        (_: unknown, data: object): SaleEntity =>
+          ({
+            ...data,
+          }) as SaleEntity,
+      );
       mockManager.save
         .mockResolvedValueOnce(undefined)
         .mockResolvedValueOnce(mockSavedSale)
         .mockResolvedValueOnce(undefined);
 
-      const input = { reservationId: 'res-1', userId: 'user-1' };
+      const input: ICreateSalesInput = {
+        reservationId: 'res-1',
+        userId: 'user-1',
+      };
 
       // Act
-      const result = await useCase.execute(input);
+      const result: SaleEntity = await useCase.execute(input);
 
       // Assert
       expect(result).toBeDefined();
@@ -129,7 +137,10 @@ describe('CreateSalesUseCase', () => {
       // Arrange
       mockManager.findOne.mockResolvedValue(null);
 
-      const input = { reservationId: 'non-existent', userId: 'user-1' };
+      const input: ICreateSalesInput = {
+        reservationId: 'non-existent',
+        userId: 'user-1',
+      };
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(NotFoundException);
@@ -139,7 +150,10 @@ describe('CreateSalesUseCase', () => {
       // Arrange
       mockManager.findOne.mockResolvedValue(mockReservation);
 
-      const input = { reservationId: 'res-1', userId: 'other-user' };
+      const input: ICreateSalesInput = {
+        reservationId: 'res-1',
+        userId: 'other-user',
+      };
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(ForbiddenException);
@@ -147,13 +161,16 @@ describe('CreateSalesUseCase', () => {
 
     it('should throw ConflictException when reservation is not PENDING', async () => {
       // Arrange
-      const confirmedReservation = {
+      const confirmedReservation: ReservationEntity = {
         ...mockReservation,
         status: ReservationStatus.CONFIRMED,
       };
       mockManager.findOne.mockResolvedValue(confirmedReservation);
 
-      const input = { reservationId: 'res-1', userId: 'user-1' };
+      const input: ICreateSalesInput = {
+        reservationId: 'res-1',
+        userId: 'user-1',
+      };
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(ConflictException);
@@ -161,17 +178,20 @@ describe('CreateSalesUseCase', () => {
 
     it('should throw BadRequestException when reservation is expired', async () => {
       // Arrange - status must stay PENDING, only expiresAt in the past
-      const expiredReservation = {
+      const expiredReservation: ReservationEntity = {
         id: 'res-1',
         userId: 'user-1',
         seatId: 'seat-1',
         sessionId: 'session-1',
         status: ReservationStatus.PENDING,
         expiresAt: new Date(Date.now() - 1000),
-      };
+      } as ReservationEntity;
       mockManager.findOne.mockResolvedValue(expiredReservation);
 
-      const input = { reservationId: 'res-1', userId: 'user-1' };
+      const input: ICreateSalesInput = {
+        reservationId: 'res-1',
+        userId: 'user-1',
+      };
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(BadRequestException);
@@ -186,7 +206,10 @@ describe('CreateSalesUseCase', () => {
         })
         .mockResolvedValueOnce(null);
 
-      const input = { reservationId: 'res-1', userId: 'user-1' };
+      const input: ICreateSalesInput = {
+        reservationId: 'res-1',
+        userId: 'user-1',
+      };
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(NotFoundException);
@@ -194,12 +217,18 @@ describe('CreateSalesUseCase', () => {
 
     it('should throw ConflictException when seat is already sold', async () => {
       // Arrange
-      const soldSeat = { ...mockSeat, status: SeatStatus.SOLD };
+      const soldSeat: SeatEntity = {
+        ...mockSeat,
+        status: SeatStatus.SOLD,
+      } as SeatEntity;
       mockManager.findOne
         .mockResolvedValueOnce(mockReservation)
         .mockResolvedValueOnce(soldSeat);
 
-      const input = { reservationId: 'res-1', userId: 'user-1' };
+      const input: ICreateSalesInput = {
+        reservationId: 'res-1',
+        userId: 'user-1',
+      };
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(ConflictException);
@@ -207,7 +236,11 @@ describe('CreateSalesUseCase', () => {
 
     it('should throw ConflictException when seat is AVAILABLE (reservation expired)', async () => {
       // Arrange - seat must be RESERVED to confirm sale
-      const availableSeat = { ...mockSeat, status: SeatStatus.AVAILABLE };
+      const availableSeat: SeatEntity = {
+        ...mockSeat,
+        status: SeatStatus.AVAILABLE,
+      } as SeatEntity;
+
       mockManager.findOne
         .mockResolvedValueOnce(mockReservation)
         .mockResolvedValueOnce(availableSeat);

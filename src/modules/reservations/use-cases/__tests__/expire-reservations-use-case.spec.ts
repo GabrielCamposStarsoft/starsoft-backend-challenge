@@ -13,7 +13,7 @@ describe('ExpireReservationsUseCase', () => {
     Pick<Repository<ReservationEntity>, 'find'>
   >;
 
-  const mockExpiredReservation = {
+  const mockExpiredReservation: ReservationEntity = {
     id: 'res-1',
     seatId: 'seat-1',
     sessionId: 'session-1',
@@ -21,7 +21,7 @@ describe('ExpireReservationsUseCase', () => {
     expiresAt: new Date(Date.now() - 1000),
   } as ReservationEntity;
 
-  beforeEach(async () => {
+  beforeEach(async (): Promise<void> => {
     const mockQueryRunner = {
       connect: jest.fn().mockResolvedValue(undefined),
       startTransaction: jest.fn().mockResolvedValue(undefined),
@@ -65,12 +65,12 @@ describe('ExpireReservationsUseCase', () => {
     reservationsRepository = module.get(getRepositoryToken(ReservationEntity));
   });
 
-  it('should be defined', () => {
+  it('should be defined', (): void => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
-    it('should expire pending reservations past expiration date', async () => {
+  describe('execute', (): void => {
+    it('should expire pending reservations past expiration date', async (): Promise<void> => {
       // Act
       await useCase.execute(new Date());
 

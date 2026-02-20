@@ -10,6 +10,8 @@ import type { EntityManager } from 'typeorm';
 import { DataSource } from 'typeorm';
 import { ReservationStatus } from '../../enums';
 import { DeleteReservationsUseCase } from '../delete-reservations.use-case';
+import type { ReservationEntity } from '../../entities';
+import type { IDeleteReservationsInput } from '../interfaces';
 
 describe('DeleteReservationsUseCase', () => {
   let useCase: DeleteReservationsUseCase;
@@ -17,15 +19,15 @@ describe('DeleteReservationsUseCase', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let i18nService: jest.Mocked<Pick<I18nService, 't'>>;
 
-  const mockPendingReservation = {
+  const mockPendingReservation: ReservationEntity = {
     id: 'res-1',
     userId: 'user-1',
     seatId: 'seat-1',
     sessionId: 'session-1',
     status: ReservationStatus.PENDING,
-  };
+  } as ReservationEntity;
 
-  beforeEach(async () => {
+  beforeEach(async (): Promise<void> => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DeleteReservationsUseCase,
@@ -47,19 +49,19 @@ describe('DeleteReservationsUseCase', () => {
     i18nService = module.get(I18nService);
   });
 
-  beforeEach(() => {
+  beforeEach((): void => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
   });
 
-  afterEach(() => {
+  afterEach((): void => {
     jest.restoreAllMocks();
   });
 
-  it('should be defined', () => {
+  it('should be defined', (): void => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
+  describe('execute', (): void => {
     it('should delete pending reservation and release seat', async () => {
       // Arrange
       const mockManager = {
@@ -80,7 +82,7 @@ describe('DeleteReservationsUseCase', () => {
           cb(mockManager as unknown as EntityManager),
       );
 
-      const input = { id: 'res-1', userId: 'user-1' };
+      const input: IDeleteReservationsInput = { id: 'res-1', userId: 'user-1' };
 
       // Act
       await useCase.execute(input);
@@ -114,11 +116,14 @@ describe('DeleteReservationsUseCase', () => {
       };
 
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) =>
+        (cb: (mgr: EntityManager) => Promise<EntityManager>) =>
           cb(mockManager as unknown as EntityManager),
       );
 
-      const input = { id: 'res-1', userId: 'other-user' };
+      const input: IDeleteReservationsInput = {
+        id: 'res-1',
+        userId: 'other-user',
+      };
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(ForbiddenException);
@@ -126,7 +131,7 @@ describe('DeleteReservationsUseCase', () => {
 
     it('should throw ConflictException when reservation is CONFIRMED', async () => {
       // Arrange
-      const confirmedReservation = {
+      const confirmedReservation: ReservationEntity = {
         ...mockPendingReservation,
         status: ReservationStatus.CONFIRMED,
       };
@@ -135,11 +140,11 @@ describe('DeleteReservationsUseCase', () => {
       };
 
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) =>
+        (cb: (mgr: EntityManager) => Promise<EntityManager>) =>
           cb(mockManager as unknown as EntityManager),
       );
 
-      const input = { id: 'res-1', userId: 'user-1' };
+      const input: IDeleteReservationsInput = { id: 'res-1', userId: 'user-1' };
 
       // Act & Assert
       await expect(useCase.execute(input)).rejects.toThrow(ConflictException);
@@ -147,7 +152,7 @@ describe('DeleteReservationsUseCase', () => {
 
     it('should throw ConflictException when reservation is EXPIRED', async () => {
       // Arrange
-      const expiredReservation = {
+      const expiredReservation: ReservationEntity = {
         ...mockPendingReservation,
         status: ReservationStatus.EXPIRED,
       };
@@ -156,7 +161,7 @@ describe('DeleteReservationsUseCase', () => {
       };
 
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) =>
+        (cb: (mgr: EntityManager) => Promise<EntityManager>) =>
           cb(mockManager as unknown as EntityManager),
       );
 
@@ -168,7 +173,7 @@ describe('DeleteReservationsUseCase', () => {
 
     it('should throw ConflictException when reservation is CANCELLED', async () => {
       // Arrange
-      const cancelledReservation = {
+      const cancelledReservation: ReservationEntity = {
         ...mockPendingReservation,
         status: ReservationStatus.CANCELLED,
       };
@@ -177,7 +182,7 @@ describe('DeleteReservationsUseCase', () => {
       };
 
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) =>
+        (cb: (mgr: EntityManager) => Promise<EntityManager>) =>
           cb(mockManager as unknown as EntityManager),
       );
 

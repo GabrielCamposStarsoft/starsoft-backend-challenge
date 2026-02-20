@@ -6,7 +6,7 @@ import type { Repository } from 'typeorm';
 import { ReservationEntity } from '../../entities';
 import { FindByIdReservationUseCase } from '../find-by-id-reservations.use-case';
 
-describe('FindByIdReservationUseCase', () => {
+describe('FindByIdReservationUseCase', (): void => {
   let useCase: FindByIdReservationUseCase;
   let reservationsRepository: jest.Mocked<
     Pick<Repository<ReservationEntity>, 'findOne'>
@@ -24,7 +24,7 @@ describe('FindByIdReservationUseCase', () => {
     updatedAt: new Date(),
   } as ReservationEntity;
 
-  beforeEach(async () => {
+  beforeEach(async (): Promise<void> => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindByIdReservationUseCase,
@@ -48,25 +48,28 @@ describe('FindByIdReservationUseCase', () => {
     i18nService = module.get(I18nService);
   });
 
-  beforeEach(() => {
+  beforeEach((): void => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
   });
 
-  afterEach(() => {
+  afterEach((): void => {
     jest.restoreAllMocks();
   });
 
-  it('should be defined', () => {
+  it('should be defined', (): void => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
+  describe('execute', (): void => {
     it('should return reservation when found by id', async () => {
       // Arrange
       reservationsRepository.findOne.mockResolvedValue(mockReservation);
 
       // Act
-      const result = await useCase.execute({ id: 'res-1', userId: 'user-1' });
+      const result: ReservationEntity = await useCase.execute({
+        id: 'res-1',
+        userId: 'user-1',
+      });
 
       // Assert
       expect(result).toEqual(mockReservation);
@@ -81,9 +84,9 @@ describe('FindByIdReservationUseCase', () => {
       i18nService.t.mockReturnValue('Reservation not found');
 
       // Act & Assert
-      await expect(useCase.execute({ id: 'non-existent', userId: 'user-1' })).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        useCase.execute({ id: 'non-existent', userId: 'user-1' }),
+      ).rejects.toThrow(NotFoundException);
 
       expect(i18nService.t).toHaveBeenCalledWith('common.reservation.notFound');
     });

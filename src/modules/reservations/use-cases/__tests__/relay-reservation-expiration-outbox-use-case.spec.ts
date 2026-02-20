@@ -14,7 +14,7 @@ describe('RelayReservationExpirationOutboxUseCase', () => {
     Pick<MessagingProducer, 'publishReservationExpired' | 'publishSeatReleased'>
   >;
 
-  const mockOutboxRow = {
+  const mockOutboxRow: ReservationExpirationOutboxEntity = {
     id: 'outbox-1',
     reservationId: 'res-1',
     seatId: 'seat-1',
@@ -25,7 +25,7 @@ describe('RelayReservationExpirationOutboxUseCase', () => {
     createdAt: new Date(),
   };
 
-  beforeEach(async () => {
+  beforeEach(async (): Promise<void> => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RelayReservationExpirationOutboxUseCase,
@@ -53,19 +53,17 @@ describe('RelayReservationExpirationOutboxUseCase', () => {
     messagingProducer = module.get(MessagingProducer);
   });
 
-  it('should be defined', () => {
+  it('should be defined', (): void => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
+  describe('execute', (): void => {
     it('should publish ReservationExpired and SeatReleased when seatReleased is true', async () => {
       // Arrange
-      expirationOutboxRepository.find.mockResolvedValue([
-        mockOutboxRow as ReservationExpirationOutboxEntity,
-      ]);
+      expirationOutboxRepository.find.mockResolvedValue([mockOutboxRow]);
 
       // Act
-      const result = await useCase.execute();
+      const result: number = await useCase.execute();
 
       // Assert
       expect(result).toBe(1);
@@ -88,7 +86,7 @@ describe('RelayReservationExpirationOutboxUseCase', () => {
 
     it('should only publish ReservationExpired when seatReleased is false', async () => {
       // Arrange
-      const rowWithoutSeatRelease = {
+      const rowWithoutSeatRelease: ReservationExpirationOutboxEntity = {
         ...mockOutboxRow,
         seatReleased: false,
       } as ReservationExpirationOutboxEntity;
@@ -97,7 +95,7 @@ describe('RelayReservationExpirationOutboxUseCase', () => {
       ]);
 
       // Act
-      const result = await useCase.execute();
+      const result: number = await useCase.execute();
 
       // Assert
       expect(result).toBe(1);
@@ -112,7 +110,7 @@ describe('RelayReservationExpirationOutboxUseCase', () => {
       expirationOutboxRepository.find.mockResolvedValue([]);
 
       // Act
-      const result = await useCase.execute();
+      const result: number = await useCase.execute();
 
       // Assert
       expect(result).toBe(0);

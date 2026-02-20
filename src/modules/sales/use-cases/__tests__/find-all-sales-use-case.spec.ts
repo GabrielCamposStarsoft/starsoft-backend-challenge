@@ -3,14 +3,15 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { SaleEntity } from '../../entities';
 import { FindAllSalesUseCase } from '../find-all-sales.use-case';
+import type { IFindAllSalesInput } from '../interfaces';
 
-describe('FindAllSalesUseCase', () => {
+describe('FindAllSalesUseCase', (): void => {
   let useCase: FindAllSalesUseCase;
   let salesRepository: jest.Mocked<
     Pick<Repository<SaleEntity>, 'findAndCount'>
   >;
 
-  const mockSales: SaleEntity[] = [
+  const mockSales: Array<SaleEntity> = [
     {
       id: 'sale-1',
       reservationId: 'res-1',
@@ -22,7 +23,7 @@ describe('FindAllSalesUseCase', () => {
     } as SaleEntity,
   ];
 
-  beforeEach(async () => {
+  beforeEach(async (): Promise<void> => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FindAllSalesUseCase,
@@ -39,19 +40,19 @@ describe('FindAllSalesUseCase', () => {
     salesRepository = module.get(getRepositoryToken(SaleEntity));
   });
 
-  it('should be defined', () => {
+  it('should be defined', (): void => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
-    it('should return sales and total count with pagination', async () => {
+  describe('execute', (): void => {
+    it('should return sales and total count with pagination', async (): Promise<void> => {
       // Arrange
       salesRepository.findAndCount.mockResolvedValue([mockSales, 1]);
 
-      const input = { page: 1, limit: 10 };
+      const input: IFindAllSalesInput = { page: 1, limit: 10 };
 
       // Act
-      const result = await useCase.execute(input);
+      const result: [Array<SaleEntity>, number] = await useCase.execute(input);
 
       // Assert
       expect(result).toEqual([mockSales, 1]);
@@ -67,7 +68,11 @@ describe('FindAllSalesUseCase', () => {
       // Arrange
       salesRepository.findAndCount.mockResolvedValue([[], 0]);
 
-      const input = { page: 1, limit: 10, userId: 'user-123' };
+      const input: IFindAllSalesInput = {
+        page: 1,
+        limit: 10,
+        userId: 'user-123',
+      };
 
       // Act
       await useCase.execute(input);

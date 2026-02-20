@@ -25,7 +25,7 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
     createdAt: new Date(),
   };
 
-  beforeEach(async () => {
+  beforeEach(async (): Promise<void> => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RelayReservationCreatedOutboxUseCase,
@@ -52,11 +52,11 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
     messagingProducer = module.get(MessagingProducer);
   });
 
-  it('should be defined', () => {
+  it('should be defined', (): void => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
+  describe('execute', (): void => {
     it('should publish ReservationCreated and mark as published', async () => {
       // Arrange
       reservationOutboxRepository.find.mockResolvedValue([
@@ -64,7 +64,7 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
       ]);
 
       // Act
-      const result = await useCase.execute();
+      const result: number = await useCase.execute();
 
       // Assert
       expect(result).toBe(1);
@@ -86,7 +86,7 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
       reservationOutboxRepository.find.mockResolvedValue([]);
 
       // Act
-      const result = await useCase.execute();
+      const result: number = await useCase.execute();
 
       // Assert
       expect(result).toBe(0);

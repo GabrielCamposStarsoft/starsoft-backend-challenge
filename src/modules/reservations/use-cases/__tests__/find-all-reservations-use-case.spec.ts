@@ -11,7 +11,7 @@ describe('FindAllReservationsUseCase', () => {
     Pick<Repository<ReservationEntity>, 'find' | 'count'>
   >;
 
-  const mockReservations: ReservationEntity[] = [
+  const mockReservations: Array<ReservationEntity> = [
     {
       id: 'res-1',
       sessionId: 'session-1',
@@ -24,8 +24,11 @@ describe('FindAllReservationsUseCase', () => {
     } as ReservationEntity,
   ];
 
-  beforeEach(async () => {
-    const mockRepository = {
+  beforeEach(async (): Promise<void> => {
+    const mockRepository: Pick<
+      Repository<ReservationEntity>,
+      'find' | 'count'
+    > = {
       find: jest.fn(),
       count: jest.fn(),
     };
@@ -44,20 +47,21 @@ describe('FindAllReservationsUseCase', () => {
     reservationsRepository = module.get(getRepositoryToken(ReservationEntity));
   });
 
-  it('should be defined', () => {
+  it('should be defined', (): void => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
+  describe('execute', (): void => {
     it('should return reservations and total count with default pagination', async () => {
       // Arrange
       reservationsRepository.find.mockResolvedValue(mockReservations);
       reservationsRepository.count.mockResolvedValue(1);
 
-      const input = { page: 1, limit: 10 };
+      const input: IFindAllReservationsInput = { page: 1, limit: 10 };
 
       // Act
-      const result = await useCase.execute(input);
+      const result: [Array<ReservationEntity>, number] =
+        await useCase.execute(input);
 
       // Assert
       expect(result).toEqual([mockReservations, 1]);
@@ -75,7 +79,11 @@ describe('FindAllReservationsUseCase', () => {
       reservationsRepository.find.mockResolvedValue([]);
       reservationsRepository.count.mockResolvedValue(0);
 
-      const input = { page: 1, limit: 10, userId: 'user-123' };
+      const input: IFindAllReservationsInput = {
+        page: 1,
+        limit: 10,
+        userId: 'user-123',
+      };
 
       // Act
       await useCase.execute(input);
@@ -88,7 +96,7 @@ describe('FindAllReservationsUseCase', () => {
       );
     });
 
-    it('should filter by sessionId and status when provided', async () => {
+    it('should filter by sessionId and status when provided', async (): Promise<void> => {
       // Arrange
       reservationsRepository.find.mockResolvedValue([]);
       reservationsRepository.count.mockResolvedValue(0);

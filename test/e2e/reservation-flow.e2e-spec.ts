@@ -36,7 +36,7 @@ interface LoginResponse {
   accessToken: string;
 }
 
-describe('E2E Reservation Flow', () => {
+describe('E2E Reservation Flow', (): void => {
   let app: INestApplication<FastifyInstance>;
   let ds: DataSource;
   let userToken: string;
@@ -44,7 +44,7 @@ describe('E2E Reservation Flow', () => {
   let seats: TestSeat[];
   let user: TestUser;
 
-  beforeAll(async () => {
+  beforeAll(async (): Promise<void> => {
     ds = await getTestDataSource();
     await runTestMigrations();
 

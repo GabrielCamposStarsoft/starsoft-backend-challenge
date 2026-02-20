@@ -5,12 +5,15 @@ import {
 } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { I18nService } from 'nestjs-i18n';
-import type { EntityManager } from 'typeorm';
-import { DataSource } from 'typeorm';
-import { SessionStatus } from '../../../sessions/enums';
+import type { Optional } from 'src/common';
+import type { SeatEntity } from 'src/modules/seats/entities';
+import { DataSource, type EntityManager } from 'typeorm';
 import type { SessionEntity } from '../../../sessions/entities';
+import { SessionStatus } from '../../../sessions/enums';
 import type { UserEntity } from '../../../users/entities';
+import type { ReservationEntity } from '../../entities';
 import { CreateReservationsUseCase } from '../create-reservations.use-case';
+import type { ICreateReservationsInput } from '../interfaces';
 
 interface IMockManager {
   findOne: jest.Mock;
@@ -26,22 +29,22 @@ describe('CreateReservationsUseCase', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let i18nService: I18nService;
 
-  const mockSession = {
+  const mockSession: SessionEntity = {
     id: 'session-1',
     status: SessionStatus.ACTIVE,
   } as SessionEntity;
 
-  const mockUser = { id: 'user-1' } as UserEntity;
+  const mockUser: UserEntity = { id: 'user-1' } as UserEntity;
 
   const createMockManager = (
-    overrides?: Partial<IMockManager>,
+    overrides?: Optional<Partial<IMockManager>>,
   ): ((
-    find?: IMockManager['findOne'],
-    createQueryBuilder?: IMockManager['createQueryBuilder'],
-    create?: IMockManager['create'],
-    save?: IMockManager['save'],
+    find?: Optional<IMockManager['findOne']>,
+    createQueryBuilder?: Optional<IMockManager['createQueryBuilder']>,
+    create?: Optional<IMockManager['create']>,
+    save?: Optional<IMockManager['save']>,
   ) => EntityManager) => {
-    const mockQueryBuilder = {
+    const mockQueryBuilder: Record<string, jest.Mock> = {
       update: jest.fn().mockReturnThis(),
       set: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
@@ -66,8 +69,8 @@ describe('CreateReservationsUseCase', () => {
     ) => EntityManager;
   };
 
-  beforeEach(async () => {
-    const transactionMock = jest.fn();
+  beforeEach(async (): Promise<void> => {
+    const transactionMock: jest.Mock = jest.fn();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateReservationsUseCase,
@@ -89,14 +92,15 @@ describe('CreateReservationsUseCase', () => {
     i18nService = module.get(I18nService);
   });
 
-  it('should be defined', () => {
+  it('should be defined', (): void => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
-    it('should create reservations when session, user exist and seats are available', async () => {
+  describe('execute', (): void => {
+    it('should create reservations when session, user exist and seats are available', async (): Promise<void> => {
       // Arrange
-      const mockManager = createMockManager() as unknown as IMockManager;
+      const mockManager: IMockManager =
+        createMockManager() as unknown as IMockManager;
       mockManager.findOne
         .mockResolvedValueOnce(mockSession)
         .mockResolvedValueOnce(mockUser);
@@ -106,14 +110,14 @@ describe('CreateReservationsUseCase', () => {
           cb(mockManager as unknown as EntityManager),
       );
 
-      const input = {
+      const input: ICreateReservationsInput = {
         sessionId: 'session-1',
         seatIds: ['seat-1'],
         userId: 'user-1',
       };
 
       // Act
-      const result = await useCase.execute(input);
+      const result: Array<ReservationEntity> = await useCase.execute(input);
 
       // Assert
       expect(result).toBeDefined();
@@ -125,7 +129,9 @@ describe('CreateReservationsUseCase', () => {
     it('should throw BadRequestException when session has fewer than 16 seats', async () => {
       // Arrange
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) => {
+        (
+          cb: (mgr: EntityManager) => Promise<EntityManager>,
+        ): Promise<EntityManager> => {
           const mockManager = {
             findOne: jest.fn().mockResolvedValueOnce(mockSession),
             count: jest.fn().mockResolvedValue(10),
@@ -134,7 +140,7 @@ describe('CreateReservationsUseCase', () => {
         },
       );
 
-      const input = {
+      const input: ICreateReservationsInput = {
         sessionId: 'session-1',
         seatIds: ['seat-1'],
         userId: 'user-1',
@@ -147,7 +153,9 @@ describe('CreateReservationsUseCase', () => {
     it('should throw NotFoundException when session does not exist', async () => {
       // Arrange
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) => {
+        (
+          cb: (mgr: EntityManager) => Promise<EntityManager>,
+        ): Promise<EntityManager> => {
           const mockManager = {
             findOne: jest.fn().mockResolvedValueOnce(null),
           };
@@ -155,7 +163,7 @@ describe('CreateReservationsUseCase', () => {
         },
       );
 
-      const input = {
+      const input: ICreateReservationsInput = {
         sessionId: 'invalid-session',
         seatIds: ['seat-1'],
         userId: 'user-1',
@@ -167,12 +175,14 @@ describe('CreateReservationsUseCase', () => {
 
     it('should throw BadRequestException when session is not active', async () => {
       // Arrange
-      const inactiveSession = {
+      const inactiveSession: SessionEntity = {
         ...mockSession,
         status: SessionStatus.CANCELLED,
       };
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) => {
+        (
+          cb: (mgr: EntityManager) => Promise<EntityManager>,
+        ): Promise<EntityManager> => {
           const mockManager = {
             findOne: jest
               .fn()
@@ -184,7 +194,7 @@ describe('CreateReservationsUseCase', () => {
         },
       );
 
-      const input = {
+      const input: ICreateReservationsInput = {
         sessionId: 'session-1',
         seatIds: ['seat-1'],
         userId: 'user-1',
@@ -197,7 +207,9 @@ describe('CreateReservationsUseCase', () => {
     it('should throw NotFoundException when user does not exist', async () => {
       // Arrange
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) => {
+        (
+          cb: (mgr: EntityManager) => Promise<EntityManager>,
+        ): Promise<EntityManager> => {
           const mockManager = {
             findOne: jest
               .fn()
@@ -209,7 +221,7 @@ describe('CreateReservationsUseCase', () => {
         },
       );
 
-      const input = {
+      const input: ICreateReservationsInput = {
         sessionId: 'session-1',
         seatIds: ['seat-1'],
         userId: 'invalid-user',
@@ -223,7 +235,9 @@ describe('CreateReservationsUseCase', () => {
       // Arrange - seat exists in session but is reserved/sold (affected: 0)
       const seatInSession = { id: 'unavailable-seat', sessionId: 'session-1' };
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) => {
+        (
+          cb: (mgr: EntityManager) => Promise<EntityManager>,
+        ): Promise<EntityManager> => {
           const mockManager = {
             findOne: jest
               .fn()
@@ -243,7 +257,7 @@ describe('CreateReservationsUseCase', () => {
         },
       );
 
-      const input = {
+      const input: ICreateReservationsInput = {
         sessionId: 'session-1',
         seatIds: ['unavailable-seat'],
         userId: 'user-1',
@@ -255,10 +269,10 @@ describe('CreateReservationsUseCase', () => {
 
     it('should throw BadRequestException when seat does not belong to session', async () => {
       // Arrange - seat exists but in different session
-      const seatInOtherSession = {
+      const seatInOtherSession: SeatEntity = {
         id: 'seat-other-session',
         sessionId: 'other-session-id',
-      };
+      } as SeatEntity;
       dataSource.transaction.mockImplementation(
         (cb: (mgr: EntityManager) => Promise<unknown>) => {
           const mockManager = {
@@ -280,7 +294,7 @@ describe('CreateReservationsUseCase', () => {
         },
       );
 
-      const input = {
+      const input: ICreateReservationsInput = {
         sessionId: 'session-1',
         seatIds: ['seat-other-session'],
         userId: 'user-1',
@@ -293,7 +307,7 @@ describe('CreateReservationsUseCase', () => {
     it('should throw NotFoundException when seat does not exist', async () => {
       // Arrange
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) => {
+        (cb: (mgr: EntityManager) => Promise<EntityManager>) => {
           const mockManager = {
             findOne: jest
               .fn()
@@ -313,7 +327,7 @@ describe('CreateReservationsUseCase', () => {
         },
       );
 
-      const input = {
+      const input: ICreateReservationsInput = {
         sessionId: 'session-1',
         seatIds: ['non-existent-seat'],
         userId: 'user-1',

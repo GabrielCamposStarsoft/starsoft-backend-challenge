@@ -10,21 +10,25 @@ import { DataSource } from 'typeorm';
 import { ReservationStatus } from '../../enums';
 import type { UpdateReservationsDto } from '../../dto';
 import { UpdateReservationsUseCase } from '../update-reservations.use-case';
+import type { ReservationEntity } from '../../entities';
+import type { Optional } from 'src/common';
 
-describe('UpdateReservationsUseCase', () => {
+describe('UpdateReservationsUseCase', (): void => {
   let useCase: UpdateReservationsUseCase;
   let dataSource: { transaction: jest.Mock };
 
-  const mockReservation = {
+  const mockReservation: ReservationEntity = {
     id: 'res-1',
     userId: 'user-1',
     seatId: 'seat-1',
     sessionId: 'session-1',
     status: ReservationStatus.PENDING,
-  };
+  } as ReservationEntity;
 
-  const createQueryBuilderMock = (affected: number = 1): object => {
-    const chain = {
+  const createQueryBuilderMock: (affected?: Optional<number>) => object = (
+    affected: number = 1,
+  ): object => {
+    const chain: Record<string, jest.Mock> = {
       update: jest.fn().mockReturnThis(),
       set: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
@@ -54,11 +58,11 @@ describe('UpdateReservationsUseCase', () => {
     dataSource = module.get(DataSource);
   });
 
-  it('should be defined', () => {
+  it('should be defined', (): void => {
     expect(useCase).toBeDefined();
   });
 
-  describe('execute', () => {
+  describe('execute', (): void => {
     it('should update reservation status to CANCELLED when user owns it', async () => {
       const seatQueryBuilder = createQueryBuilderMock(1);
       const reservationQueryBuilder = createQueryBuilderMock(1);
@@ -67,7 +71,10 @@ describe('UpdateReservationsUseCase', () => {
         status: ReservationStatus.CANCELLED,
       };
 
-      const mockManager = {
+      const mockManager: Pick<
+        EntityManager,
+        'findOne' | 'findOneOrFail' | 'insert' | 'createQueryBuilder'
+      > = {
         findOne: jest.fn().mockResolvedValue(mockReservation),
         findOneOrFail: jest.fn().mockResolvedValue(updatedReservation),
         insert: jest.fn().mockResolvedValue({}),
@@ -106,7 +113,7 @@ describe('UpdateReservationsUseCase', () => {
     });
 
     it('should throw ConflictException when transitioning PENDING to EXPIRED (only scheduler may expire)', async () => {
-      const mockManager = {
+      const mockManager: Pick<EntityManager, 'findOne' | 'insert'> = {
         findOne: jest.fn().mockResolvedValue(mockReservation),
         insert: jest.fn(),
       };
@@ -218,7 +225,7 @@ describe('UpdateReservationsUseCase', () => {
       };
 
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) =>
+        (cb: (mgr: EntityManager) => Promise<EntityManager>) =>
           cb(mockManager as unknown as EntityManager),
       );
 
@@ -232,14 +239,17 @@ describe('UpdateReservationsUseCase', () => {
     });
 
     it('should record seatReleased as false when seat was not RESERVED', async () => {
-      const seatQueryBuilder = createQueryBuilderMock(0); // Seat not released (wasn't RESERVED)
-      const reservationQueryBuilder = createQueryBuilderMock(1);
-      const updatedReservation = {
+      const seatQueryBuilder: object = createQueryBuilderMock(0); // Seat not released (wasn't RESERVED)
+      const reservationQueryBuilder: object = createQueryBuilderMock(1);
+      const updatedReservation: ReservationEntity = {
         ...mockReservation,
         status: ReservationStatus.CANCELLED,
       };
 
-      const mockManager = {
+      const mockManager: Pick<
+        EntityManager,
+        'findOne' | 'findOneOrFail' | 'insert' | 'createQueryBuilder'
+      > = {
         findOne: jest.fn().mockResolvedValue(mockReservation),
         findOneOrFail: jest.fn().mockResolvedValue(updatedReservation),
         insert: jest.fn().mockResolvedValue({}),
@@ -250,7 +260,7 @@ describe('UpdateReservationsUseCase', () => {
       };
 
       dataSource.transaction.mockImplementation(
-        (cb: (mgr: EntityManager) => Promise<unknown>) =>
+        (cb: (mgr: EntityManager) => Promise<EntityManager>) =>
           cb(mockManager as unknown as EntityManager),
       );
 
