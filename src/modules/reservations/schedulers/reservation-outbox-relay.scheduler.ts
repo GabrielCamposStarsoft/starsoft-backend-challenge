@@ -1,7 +1,15 @@
+/**
+ * @fileoverview Scheduler for periodically relaying reservation outbox events.
+ * Uses a distributed lock to ensure a single instance runs at a time.
+ * @scheduler reservation-outbox-relay-scheduler
+ */
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DistributedLockService } from 'src/common';
-import { ReservationOutboxRelayService } from '../services';
+import {
+  RelayReservationCreatedOutboxUseCase,
+  RelayReservationExpirationOutboxUseCase,
+} from '../use-cases';
 
 /**
  * Distributed lock key for the outbox relay scheduler.
@@ -29,11 +37,13 @@ export class ReservationOutboxRelayScheduler {
   /**
    * Create instance of ReservationOutboxRelayScheduler.
    *
-   * @param {ReservationOutboxRelayService} reservationOutboxRelayService - Service that handles processing and relaying outbox events.
-   * @param {DistributedLockService} lockService - Service for acquiring distributed locks to serialize processing across instances.
+   * @param relayReservationCreatedOutboxUseCase - Use case for relaying created reservation events.
+   * @param relayReservationExpirationOutboxUseCase - Use case for relaying reservation expiration events.
+   * @param lockService - Service for acquiring distributed locks to serialize processing across instances.
    */
   constructor(
-    private readonly reservationOutboxRelayService: ReservationOutboxRelayService,
+    private readonly relayReservationCreatedOutboxUseCase: RelayReservationCreatedOutboxUseCase,
+    private readonly relayReservationExpirationOutboxUseCase: RelayReservationExpirationOutboxUseCase,
     private readonly lockService: DistributedLockService,
   ) {}
 
@@ -42,18 +52,14 @@ export class ReservationOutboxRelayScheduler {
    *
    * - Triggered every 30 seconds (see {@link CronExpression.EVERY_30_SECONDS}).
    * - Acquires distributed lock prior to processing, so only one instance relays at a time.
-   * - Delegates actual relay operations to {@link ReservationOutboxRelayService}.
+   * - Delegates to {@link RelayReservationCreatedOutboxUseCase} and {@link RelayReservationExpirationOutboxUseCase}.
    *
    * @async
    * @returns {Promise<void>} Resolves when relay work completes, or skips if lock not acquired.
    */
   @Cron(CronExpression.EVERY_30_SECONDS)
   public async handleRelay(): Promise<void> {
-    /**
-     * Try to acquire the distributed lock. If not successful, skip this execution.
-     * @type {boolean}
-     */
-    const isAcquired: boolean = await this.lockService.acquire(
+    const isAcquired = await this.lockService.acquire(
       LOCK_KEY,
       LOCK_TTL_SECONDS,
     );
@@ -63,19 +69,9 @@ export class ReservationOutboxRelayScheduler {
     }
 
     try {
-      /**
-       * Process all pending "reservation created" outbox events.
-       */
-      await this.reservationOutboxRelayService.processPendingEvents();
-
-      /**
-       * Process all pending "reservation expiration" outbox events.
-       */
-      await this.reservationOutboxRelayService.processExpirationPendingEvents();
+      await this.relayReservationCreatedOutboxUseCase.execute();
+      await this.relayReservationExpirationOutboxUseCase.execute();
     } finally {
-      /**
-       * Always release the distributed lock after processing completes or if an error occurs.
-       */
       await this.lockService.release(LOCK_KEY);
     }
   }

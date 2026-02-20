@@ -1,6 +1,7 @@
 /**
  * @fileoverview Scheduler for periodically expiring reservations.
  * Uses a distributed lock to ensure a single instance runs at a time.
+ * @scheduler reservation-expiration-scheduler
  */
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';

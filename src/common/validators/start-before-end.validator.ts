@@ -28,9 +28,12 @@ export class StartBeforeEndConstraint implements ValidatorConstraintInterface {
    * @param args Validation arguments, including the object instance.
    * @returns {boolean} True if valid (or not both values present/valid), false if invalid.
    */
-  validate(_value: unknown, args: ValidationArguments): boolean {
+  public validate(_value: unknown, args: ValidationArguments): boolean {
     /** @type {{ startTime?: Optional<string>; endTime?: Optional<string> }} */
-    const obj = args.object as {
+    const obj: {
+      startTime?: Optional<string>;
+      endTime?: Optional<string>;
+    } = args.object as {
       startTime?: Optional<string>;
       endTime?: Optional<string>;
     };
@@ -42,13 +45,13 @@ export class StartBeforeEndConstraint implements ValidatorConstraintInterface {
 
     // Parse and validate startTime
     if (typeof obj.startTime === 'string' && obj.startTime.trim() !== '') {
-      const time = new Date(obj.startTime).getTime();
+      const time: number = new Date(obj.startTime).getTime();
       start = Number.isNaN(time) ? null : time;
     }
 
     // Parse and validate endTime
     if (typeof obj.endTime === 'string' && obj.endTime.trim() !== '') {
-      const time = new Date(obj.endTime).getTime();
+      const time: number = new Date(obj.endTime).getTime();
       end = Number.isNaN(time) ? null : time;
     }
 

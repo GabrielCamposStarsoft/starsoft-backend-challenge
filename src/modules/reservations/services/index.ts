@@ -5,4 +5,4 @@
  */
 
 export * from './reservations.service';
-export * from './reservation-outbox-relay.service';
+export * from './reservation-outbox-cleanup.service';

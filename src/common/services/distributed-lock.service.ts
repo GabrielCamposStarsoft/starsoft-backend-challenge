@@ -88,7 +88,9 @@ export class DistributedLockService implements OnModuleDestroy {
       this.heldLocks.set(key, lock);
       return true;
     } catch {
-      // Could not acquire lock, possibly already held by another instance.
+      /**
+       * Could not acquire lock, possibly already held by another instance.
+       */
       return false;
     }
   }

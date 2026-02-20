@@ -1,2 +1,2 @@
 export * from './sales.service';
-export * from './outbox-relay.service';
+export * from './sales-outbox-cleanup.service';

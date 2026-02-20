@@ -9,20 +9,26 @@
 
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
-import { MessagingModule } from '../../core/messaging/messaging.module';
-import { ReservationsController } from './controllers';
-import { ReservationsService } from './services';
-import { ReservationsUseCases } from './use-cases';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MessagingModule } from 'src/core/';
+import { SeatEntity } from '../seats/entities';
+import { ReservationsController } from './controllers';
 import {
   ReservationEntity,
-  ReservationOutboxEntity,
   ReservationExpirationOutboxEntity,
+  ReservationOutboxEntity,
 } from './entities';
-import { SeatEntity } from '../seats/entities';
-import { ReservationsExpirationScheduler } from './schedulers/reservation-expiration.scheduler';
-import { ReservationOutboxRelayService } from './services/reservation-outbox-relay.service';
-import { ReservationOutboxRelayScheduler } from './schedulers/reservation-outbox-relay.scheduler';
+import {
+  ReservationOutboxCleanupScheduler,
+  ReservationOutboxRelayScheduler,
+  ReservationsExpirationScheduler,
+} from './schedulers';
+import {
+  ReservationOutboxCleanupService,
+  ReservationsService,
+} from './services';
+import { ReservationsUseCases } from './use-cases';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -41,8 +47,9 @@ import { ReservationOutboxRelayScheduler } from './schedulers/reservation-outbox
     ReservationsService,
     ...ReservationsUseCases,
     ReservationsExpirationScheduler,
-    ReservationOutboxRelayService,
     ReservationOutboxRelayScheduler,
+    ReservationOutboxCleanupService,
+    ReservationOutboxCleanupScheduler,
   ],
   exports: [ReservationsService],
 })

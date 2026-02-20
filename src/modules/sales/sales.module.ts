@@ -10,11 +10,14 @@
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MessagingModule } from '../../core/messaging/messaging.module';
+import { MessagingModule } from 'src/core';
 import { SalesController } from './controllers';
 import { SaleEntity, SaleOutboxEntity } from './entities';
-import { OutboxRelayScheduler } from './schedulers';
-import { OutboxRelayService, SalesService } from './services';
+import {
+  SalesOutboxCleanupScheduler,
+  SalesOutboxRelayScheduler,
+} from './schedulers';
+import { SalesOutboxCleanupService, SalesService } from './services';
 import { SalesUseCases } from './use-cases';
 
 @Module({
@@ -31,9 +34,10 @@ import { SalesUseCases } from './use-cases';
   controllers: [SalesController],
   providers: [
     SalesService,
+    SalesOutboxCleanupService,
     ...SalesUseCases,
-    OutboxRelayService,
-    OutboxRelayScheduler,
+    SalesOutboxRelayScheduler,
+    SalesOutboxCleanupScheduler,
   ],
   exports: [SalesService],
 })

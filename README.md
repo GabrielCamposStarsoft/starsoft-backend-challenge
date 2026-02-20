@@ -353,6 +353,15 @@ export interface IUseCase<Input, Output> {
 5. RELAY DE VENDAS (scheduler a cada 30s)
    └─ RelaySaleOutboxUseCase
       └─ publish PaymentConfirmed → consumer invalida cache
+
+6. CLEANUP DE OUTBOX (scheduler a cada hora, com distributed lock)
+   ├─ SalesOutboxCleanupScheduler
+   │  └─ SalesOutboxCleanupService → CleanSaleOutboxUseCase
+   │     └─ DELETE sales_outbox WHERE processed=true AND created_at < now()-7d
+   └─ ReservationOutboxCleanupScheduler
+      └─ ReservationOutboxCleanupService → CleanReservationOutboxUseCase
+         └─ DELETE reservation_events_outbox WHERE published=true AND created_at < now()-7d
+            DELETE reservation_expiration_outbox WHERE published=true AND created_at < now()-7d
 ```
 
 ---
@@ -488,8 +497,9 @@ O `IdempotencyInterceptor` garante que requests duplicadas (retries, cliques dup
 
 ```
 UseCase → Outbox Table (na mesma transacao)
-  → Scheduler (relay a cada 30s) → MessagingProducer → RabbitMQ
+  → Scheduler de relay (a cada 30s) → MessagingProducer → RabbitMQ
     → MessagingConsumer → dedup check → invalidate cache → ack
+  → Scheduler de cleanup (a cada hora) → DELETE WHERE published/processed=true AND created_at < now()-7d
 ```
 
 ### Deduplicacao no consumer
@@ -1033,6 +1043,7 @@ curl -X POST http://localhost:8088/sales \
 | **Mensagens duplicadas** | Deduplicacao | Cache com TTL 24h no consumer |
 | **Mensagens com falha** | DLQ | `x-dead-letter-exchange` + nack sem requeue |
 | **Disponibilidade em cache** | Invalidacao por evento | Consumer invalida `seats:session:{id}` |
+| **Crescimento das tabelas de outbox** | Cleanup automatico | Scheduler a cada hora deleta registros `published/processed=true` com mais de 7 dias |
 
 ---
 
@@ -1067,9 +1078,8 @@ curl -X POST http://localhost:8088/sales \
 3. **Redlock com um node**: Falha do Redis pode liberar locks e permitir execucao duplicada de schedulers
 4. **Connection pool**: Sem tuning explicito; o default do TypeORM pode ser insuficiente sob carga extrema
 5. **Indices na outbox**: Queries de relay podem fazer full scan em volumes altos
-6. **Limpeza de outbox**: Registros publicados nao sao removidos; tabelas crescem ao longo do tempo
-7. **Idempotency polling**: Timeout de ~305s; requests duplicadas podem ficar presas em polling
-8. **Throttler restritivo**: 10 req/min por IP pode limitar testes manuais intensivos
+6. **Idempotency polling**: Timeout de ~305s; requests duplicadas podem ficar presas em polling
+7. **Throttler restritivo**: 10 req/min por IP pode limitar testes manuais intensivos
 
 ---
 
@@ -1080,7 +1090,6 @@ curl -X POST http://localhost:8088/sales \
 - Isolation level explicito nas transacoes criticas e documentacao da escolha
 - Retry com backoff exponencial no relay de outbox
 - Indices parciais nas tabelas de outbox para queries de relay (`WHERE published = false`)
-- Job para limpeza de registros de outbox ja publicados
 - Ajuste do Throttler para ambiente de desenvolvimento/teste
 - Connection pool tuning (`poolSize`, `connectionTimeout`) conforme carga esperada
 - Teste de edge case: pagamento no limite da expiracao (ex: TTL 2s, pagamento em 1.9s)
