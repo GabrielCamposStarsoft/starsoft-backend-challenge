@@ -99,7 +99,10 @@ describe('UpdateSessionUseCase', () => {
       // Assert
       expect(sessionRepository.update).toHaveBeenCalledWith(
         'session-1',
-        expect.objectContaining({ movieTitle: 'Interstellar', ticketPrice: 30 }),
+        expect.objectContaining({
+          movieTitle: 'Interstellar',
+          ticketPrice: 30,
+        }),
       );
     });
 
@@ -175,8 +178,12 @@ describe('UpdateSessionUseCase', () => {
       i18nService.t.mockReturnValue('Room schedule conflict');
 
       const pgError = { code: '23P01' };
-      const queryFailedError = Object.create(QueryFailedError.prototype) as QueryFailedError;
-      Object.defineProperty(queryFailedError, 'driverError', { value: pgError });
+      const queryFailedError = Object.create(
+        QueryFailedError.prototype,
+      ) as QueryFailedError;
+      Object.defineProperty(queryFailedError, 'driverError', {
+        value: pgError,
+      });
       sessionRepository.update.mockRejectedValue(queryFailedError);
 
       const input = {
@@ -202,7 +209,9 @@ describe('UpdateSessionUseCase', () => {
       };
 
       // Act & Assert
-      await expect(useCase.execute(input)).rejects.toThrow('DB connection error');
+      await expect(useCase.execute(input)).rejects.toThrow(
+        'DB connection error',
+      );
     });
 
     it('should not check overlap against the session being updated', async () => {

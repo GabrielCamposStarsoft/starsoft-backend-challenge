@@ -4,10 +4,7 @@ import type { Repository } from 'typeorm';
 import { MessagingProducer } from 'src/core';
 import { SaleOutboxEntity } from '../../entities/sale-outbox.entity';
 import { RelaySaleOutboxUseCase } from '../relay-sale-outbox.use-case';
-import {
-  BASE_RETRY_DELAY_MS,
-  MAX_RETRY_DELAY_MS,
-} from '../../constants';
+import { BASE_RETRY_DELAY_MS, MAX_RETRY_DELAY_MS } from '../../constants';
 
 describe('RelaySaleOutboxUseCase', (): void => {
   let useCase: RelaySaleOutboxUseCase;
@@ -135,10 +132,10 @@ describe('RelaySaleOutboxUseCase', (): void => {
         { id: 'outbox-1' },
         expect.objectContaining({
           retryCount: 1,
-          nextRetryAt: expect.any(Date),
+          nextRetryAt: expect.any(Date) as Date,
         }),
       );
-      const [, payload] = outboxRepository.update.mock.calls[0] as [
+      const [, payload] = outboxRepository.update.mock.calls[0] as unknown as [
         unknown,
         { nextRetryAt: Date },
       ][];
@@ -231,7 +228,7 @@ describe('RelaySaleOutboxUseCase', (): void => {
         { id: 'outbox-1' },
         expect.objectContaining({
           retryCount: 1,
-          nextRetryAt: expect.any(Date),
+          nextRetryAt: expect.any(Date) as Date,
         }),
       );
       expect(outboxRepository.update).toHaveBeenCalledWith(
@@ -250,6 +247,7 @@ describe('RelaySaleOutboxUseCase', (): void => {
       // Assert — where must be an array (IS NULL / <= now) so backoff is enforced
       expect(outboxRepository.find).toHaveBeenCalledWith(
         expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           where: expect.arrayContaining([
             expect.objectContaining({ processed: false }),
             expect.objectContaining({ processed: false }),

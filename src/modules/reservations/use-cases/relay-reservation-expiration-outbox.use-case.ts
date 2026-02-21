@@ -39,8 +39,16 @@ export class RelayReservationExpirationOutboxUseCase implements IUseCase<
     const now = new Date();
     const pending = await this.expirationOutboxRepository.find({
       where: [
-        { published: false, retryCount: LessThan(MAX_RETRY_COUNT), nextRetryAt: IsNull() },
-        { published: false, retryCount: LessThan(MAX_RETRY_COUNT), nextRetryAt: LessThanOrEqual(now) },
+        {
+          published: false,
+          retryCount: LessThan(MAX_RETRY_COUNT),
+          nextRetryAt: IsNull(),
+        },
+        {
+          published: false,
+          retryCount: LessThan(MAX_RETRY_COUNT),
+          nextRetryAt: LessThanOrEqual(now),
+        },
       ],
       order: { createdAt: 'ASC' },
       take: BATCH_SIZE,

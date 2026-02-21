@@ -67,8 +67,16 @@ export class RelaySaleOutboxUseCase implements IUseCase<void, number> {
     const now = new Date();
     const pending: Array<SaleOutboxEntity> = await this.outboxRepository.find({
       where: [
-        { processed: false, retryCount: LessThan(MAX_RETRY_COUNT), nextRetryAt: IsNull() },
-        { processed: false, retryCount: LessThan(MAX_RETRY_COUNT), nextRetryAt: LessThanOrEqual(now) },
+        {
+          processed: false,
+          retryCount: LessThan(MAX_RETRY_COUNT),
+          nextRetryAt: IsNull(),
+        },
+        {
+          processed: false,
+          retryCount: LessThan(MAX_RETRY_COUNT),
+          nextRetryAt: LessThanOrEqual(now),
+        },
       ],
       order: { createdAt: 'ASC' },
       take: BATCH_SIZE,

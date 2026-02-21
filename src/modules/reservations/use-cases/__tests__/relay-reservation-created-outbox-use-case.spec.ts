@@ -4,10 +4,7 @@ import type { Repository } from 'typeorm';
 import { MessagingProducer } from 'src/core';
 import { ReservationOutboxEntity } from '../../entities';
 import { RelayReservationCreatedOutboxUseCase } from '../relay-reservation-created-outbox.use-case';
-import {
-  BASE_RETRY_DELAY_MS,
-  MAX_RETRY_DELAY_MS,
-} from '../../constants';
+import { BASE_RETRY_DELAY_MS, MAX_RETRY_DELAY_MS } from '../../constants';
 
 describe('RelayReservationCreatedOutboxUseCase', () => {
   let useCase: RelayReservationCreatedOutboxUseCase;
@@ -94,7 +91,9 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
 
       // Assert
       expect(result).toBe(0);
-      expect(messagingProducer.publishReservationCreated).not.toHaveBeenCalled();
+      expect(
+        messagingProducer.publishReservationCreated,
+      ).not.toHaveBeenCalled();
       expect(reservationOutboxRepository.update).not.toHaveBeenCalled();
     });
 
@@ -114,11 +113,22 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
       expect(result).toBe(0);
       expect(reservationOutboxRepository.update).toHaveBeenCalledWith(
         { id: 'outbox-1' },
-        expect.objectContaining({ retryCount: 1, nextRetryAt: expect.any(Date) }),
+        expect.objectContaining({
+          retryCount: 1,
+          nextRetryAt: expect.any(Date) as Date,
+        }),
       );
-      const nextRetryAt = (reservationOutboxRepository.update.mock.calls[0][1] as unknown as { nextRetryAt: Date }).nextRetryAt;
-      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(before + BASE_RETRY_DELAY_MS);
-      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(after + BASE_RETRY_DELAY_MS);
+      const nextRetryAt = (
+        reservationOutboxRepository.update.mock.calls[0][1] as unknown as {
+          nextRetryAt: Date;
+        }
+      ).nextRetryAt;
+      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(
+        before + BASE_RETRY_DELAY_MS,
+      );
+      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(
+        after + BASE_RETRY_DELAY_MS,
+      );
     });
 
     it('should double the delay on each subsequent retry', async (): Promise<void> => {
@@ -139,8 +149,14 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
 
       // Assert — delay = 30s * 2^3 = 240_000ms
       const expectedDelay = BASE_RETRY_DELAY_MS * Math.pow(2, 3);
-      const nextRetryAt = (reservationOutboxRepository.update.mock.calls[0][1] as unknown as { nextRetryAt: Date }).nextRetryAt;
-      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(before + expectedDelay);
+      const nextRetryAt = (
+        reservationOutboxRepository.update.mock.calls[0][1] as unknown as {
+          nextRetryAt: Date;
+        }
+      ).nextRetryAt;
+      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(
+        before + expectedDelay,
+      );
       expect(nextRetryAt.getTime()).toBeLessThanOrEqual(after + expectedDelay);
     });
 
@@ -161,9 +177,17 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
       const after = Date.now();
 
       // Assert
-      const nextRetryAt = (reservationOutboxRepository.update.mock.calls[0][1] as unknown as { nextRetryAt: Date }).nextRetryAt;
-      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(before + MAX_RETRY_DELAY_MS);
-      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(after + MAX_RETRY_DELAY_MS);
+      const nextRetryAt = (
+        reservationOutboxRepository.update.mock.calls[0][1] as unknown as {
+          nextRetryAt: Date;
+        }
+      ).nextRetryAt;
+      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(
+        before + MAX_RETRY_DELAY_MS,
+      );
+      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(
+        after + MAX_RETRY_DELAY_MS,
+      );
     });
 
     it('should continue processing remaining rows when one fails', async (): Promise<void> => {
@@ -172,7 +196,10 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
         ...mockOutboxRow,
         id: 'outbox-2',
       } as ReservationOutboxEntity;
-      reservationOutboxRepository.find.mockResolvedValue([mockOutboxRow, secondRow]);
+      reservationOutboxRepository.find.mockResolvedValue([
+        mockOutboxRow,
+        secondRow,
+      ]);
       messagingProducer.publishReservationCreated
         .mockRejectedValueOnce(new Error('publish error'))
         .mockResolvedValueOnce(undefined);
@@ -182,10 +209,15 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
 
       // Assert
       expect(result).toBe(1);
-      expect(messagingProducer.publishReservationCreated).toHaveBeenCalledTimes(2);
+      expect(messagingProducer.publishReservationCreated).toHaveBeenCalledTimes(
+        2,
+      );
       expect(reservationOutboxRepository.update).toHaveBeenCalledWith(
         { id: 'outbox-1' },
-        expect.objectContaining({ retryCount: 1, nextRetryAt: expect.any(Date) }),
+        expect.objectContaining({
+          retryCount: 1,
+          nextRetryAt: expect.any(Date) as Date,
+        }),
       );
       expect(reservationOutboxRepository.update).toHaveBeenCalledWith(
         { id: 'outbox-2' },
@@ -203,6 +235,7 @@ describe('RelayReservationCreatedOutboxUseCase', () => {
       // Assert
       expect(reservationOutboxRepository.find).toHaveBeenCalledWith(
         expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           where: expect.arrayContaining([
             expect.objectContaining({ published: false }),
             expect.objectContaining({ published: false }),
