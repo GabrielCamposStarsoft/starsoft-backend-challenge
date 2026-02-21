@@ -1,1 +1,1 @@
-export * from './outbox.constants';
+export * from './sales-outbox.constants';

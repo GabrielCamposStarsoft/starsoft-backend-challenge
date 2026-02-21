@@ -5,7 +5,7 @@
  *
  * @entity sale-outbox-entity
  */
-import { Either } from 'src/common';
+import type { Either, Nullable } from 'src/common';
 import {
   Column,
   CreateDateColumn,
@@ -75,6 +75,26 @@ export class SaleOutboxEntity {
   })
   @Column({ default: false })
   processed: boolean;
+
+  /**
+   * Number of failed relay attempts so far.
+   * @type {number}
+   * @default 0
+   */
+  @Column({ name: 'retry_count', default: 0 })
+  retryCount: number;
+
+  /**
+   * Earliest timestamp at which the next relay attempt may occur.
+   * Null means the event is eligible for immediate processing.
+   * @type {Date | null}
+   */
+  @Column({
+    name: 'next_retry_at',
+    type: 'timestamp with time zone',
+    nullable: true,
+  })
+  nextRetryAt: Nullable<Date>;
 
   /**
    * The timestamp of when this outbox entry was created.

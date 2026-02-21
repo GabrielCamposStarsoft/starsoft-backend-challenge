@@ -30,6 +30,8 @@ export class CreateSalesOutbox1770760587260 implements MigrationInterface {
         "event" character varying NOT NULL,
         "payload" jsonb NOT NULL,
         "processed" boolean NOT NULL DEFAULT false,
+        "retry_count" integer NOT NULL DEFAULT 0,
+        "next_retry_at" TIMESTAMP WITH TIME ZONE NULL,
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         CONSTRAINT "PK_sales_outbox" PRIMARY KEY ("id")
       )

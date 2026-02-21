@@ -12,11 +12,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import type { IUseCase } from 'src/common';
 import { MessagingProducer } from 'src/core';
 import type { PaymentConfirmedEvent } from 'src/core/messaging/events/payment-confirmed.event';
-import { Repository } from 'typeorm';
+import { IsNull, LessThan, LessThanOrEqual, Repository } from 'typeorm';
 import {
   BATCH_SIZE,
+  BASE_RETRY_DELAY_MS,
+  MAX_RETRY_COUNT,
+  MAX_RETRY_DELAY_MS,
   OUTBOX_EVENT_PAYMENT_CONFIRMED,
-} from '../constants/outbox.constants';
+} from '../constants/sales-outbox.constants';
 import { SaleOutboxEntity } from '../entities/sale-outbox.entity';
 
 /**
@@ -61,8 +64,12 @@ export class RelaySaleOutboxUseCase implements IUseCase<void, number> {
      * Fetches unprocessed outbox events, ordered by creation date and limited by BATCH_SIZE.
      * @type {Array<SaleOutboxEntity>}
      */
+    const now = new Date();
     const pending: Array<SaleOutboxEntity> = await this.outboxRepository.find({
-      where: { processed: false },
+      where: [
+        { processed: false, retryCount: LessThan(MAX_RETRY_COUNT), nextRetryAt: IsNull() },
+        { processed: false, retryCount: LessThan(MAX_RETRY_COUNT), nextRetryAt: LessThanOrEqual(now) },
+      ],
       order: { createdAt: 'ASC' },
       take: BATCH_SIZE,
     });
@@ -91,12 +98,17 @@ export class RelaySaleOutboxUseCase implements IUseCase<void, number> {
         await this.outboxRepository.update({ id: row.id }, { processed: true });
         processedCount += 1;
       } catch (err) {
+        const delay = Math.min(
+          BASE_RETRY_DELAY_MS * Math.pow(2, row.retryCount),
+          MAX_RETRY_DELAY_MS,
+        );
+        const nextRetryAt = new Date(Date.now() + delay);
+        await this.outboxRepository.update(
+          { id: row.id },
+          { retryCount: row.retryCount + 1, nextRetryAt },
+        );
         this.logger.warn(
-          /**
-           * Logs any exception that occurs during the relay of an outbox event.
-           * Formats the error message appropriately whether it's an Error instance or another type.
-           */
-          `Failed to relay outbox event ${row.id} (${row.event}): ${err instanceof Error ? err.message : String(err)}`,
+          `Failed to relay outbox event ${row.id} (${row.event}), retry ${row.retryCount + 1}/${MAX_RETRY_COUNT} in ${delay / 1000}s: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
     }

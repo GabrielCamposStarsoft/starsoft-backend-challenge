@@ -5,11 +5,16 @@
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, LessThan, LessThanOrEqual, Repository } from 'typeorm';
 import { MessagingProducer } from 'src/core';
 import type { IUseCase } from 'src/common';
 import { ReservationOutboxEntity } from '../entities';
-import { BATCH_SIZE } from '../constants';
+import {
+  BATCH_SIZE,
+  BASE_RETRY_DELAY_MS,
+  MAX_RETRY_COUNT,
+  MAX_RETRY_DELAY_MS,
+} from '../constants';
 
 @Injectable()
 export class RelayReservationCreatedOutboxUseCase implements IUseCase<
@@ -27,8 +32,12 @@ export class RelayReservationCreatedOutboxUseCase implements IUseCase<
   ) {}
 
   public async execute(): Promise<number> {
+    const now = new Date();
     const pending = await this.reservationOutboxRepository.find({
-      where: { published: false },
+      where: [
+        { published: false, retryCount: LessThan(MAX_RETRY_COUNT), nextRetryAt: IsNull() },
+        { published: false, retryCount: LessThan(MAX_RETRY_COUNT), nextRetryAt: LessThanOrEqual(now) },
+      ],
       order: { createdAt: 'ASC' },
       take: BATCH_SIZE,
     });
@@ -50,8 +59,17 @@ export class RelayReservationCreatedOutboxUseCase implements IUseCase<
         );
         processedCount += 1;
       } catch (err) {
+        const delay = Math.min(
+          BASE_RETRY_DELAY_MS * Math.pow(2, row.retryCount),
+          MAX_RETRY_DELAY_MS,
+        );
+        const nextRetryAt = new Date(Date.now() + delay);
+        await this.reservationOutboxRepository.update(
+          { id: row.id },
+          { retryCount: row.retryCount + 1, nextRetryAt },
+        );
         this.logger.warn(
-          `Failed to relay reservation outbox ${row.id}: ${err instanceof Error ? err.message : String(err)}`,
+          `Failed to relay reservation outbox ${row.id}, retry ${row.retryCount + 1}/${MAX_RETRY_COUNT} in ${delay / 1000}s: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
     }

@@ -4,6 +4,10 @@ import type { Repository } from 'typeorm';
 import { MessagingProducer } from 'src/core';
 import { ReservationExpirationOutboxEntity } from '../../entities';
 import { RelayReservationExpirationOutboxUseCase } from '../relay-reservation-expiration-outbox.use-case';
+import {
+  BASE_RETRY_DELAY_MS,
+  MAX_RETRY_DELAY_MS,
+} from '../../constants';
 
 describe('RelayReservationExpirationOutboxUseCase', () => {
   let useCase: RelayReservationExpirationOutboxUseCase;
@@ -22,8 +26,10 @@ describe('RelayReservationExpirationOutboxUseCase', () => {
     seatReleased: true,
     reason: 'expired',
     published: false,
+    retryCount: 0,
+    nextRetryAt: null,
     createdAt: new Date(),
-  };
+  } as ReservationExpirationOutboxEntity;
 
   beforeEach(async (): Promise<void> => {
     const module: TestingModule = await Test.createTestingModule({
@@ -90,18 +96,14 @@ describe('RelayReservationExpirationOutboxUseCase', () => {
         ...mockOutboxRow,
         seatReleased: false,
       } as ReservationExpirationOutboxEntity;
-      expirationOutboxRepository.find.mockResolvedValue([
-        rowWithoutSeatRelease,
-      ]);
+      expirationOutboxRepository.find.mockResolvedValue([rowWithoutSeatRelease]);
 
       // Act
       const result: number = await useCase.execute();
 
       // Assert
       expect(result).toBe(1);
-      expect(messagingProducer.publishReservationExpired).toHaveBeenCalledTimes(
-        1,
-      );
+      expect(messagingProducer.publishReservationExpired).toHaveBeenCalledTimes(1);
       expect(messagingProducer.publishSeatReleased).not.toHaveBeenCalled();
     });
 
@@ -114,9 +116,122 @@ describe('RelayReservationExpirationOutboxUseCase', () => {
 
       // Assert
       expect(result).toBe(0);
-      expect(
-        messagingProducer.publishReservationExpired,
-      ).not.toHaveBeenCalled();
+      expect(messagingProducer.publishReservationExpired).not.toHaveBeenCalled();
+    });
+
+    it('should update retryCount and nextRetryAt when publish fails', async (): Promise<void> => {
+      // Arrange
+      expirationOutboxRepository.find.mockResolvedValue([mockOutboxRow]);
+      messagingProducer.publishReservationExpired.mockRejectedValueOnce(
+        new Error('broker unavailable'),
+      );
+
+      // Act
+      const before = Date.now();
+      const result: number = await useCase.execute();
+      const after = Date.now();
+
+      // Assert
+      expect(result).toBe(0);
+      expect(messagingProducer.publishSeatReleased).not.toHaveBeenCalled();
+      expect(expirationOutboxRepository.update).toHaveBeenCalledWith(
+        { id: 'outbox-1' },
+        expect.objectContaining({ retryCount: 1, nextRetryAt: expect.any(Date) }),
+      );
+      const nextRetryAt = (expirationOutboxRepository.update.mock.calls[0][1] as unknown as { nextRetryAt: Date }).nextRetryAt;
+      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(before + BASE_RETRY_DELAY_MS);
+      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(after + BASE_RETRY_DELAY_MS);
+    });
+
+    it('should double the delay on each subsequent retry', async (): Promise<void> => {
+      // Arrange
+      const rowWithPriorRetries: ReservationExpirationOutboxEntity = {
+        ...mockOutboxRow,
+        retryCount: 2,
+      } as ReservationExpirationOutboxEntity;
+      expirationOutboxRepository.find.mockResolvedValue([rowWithPriorRetries]);
+      messagingProducer.publishReservationExpired.mockRejectedValueOnce(
+        new Error('broker unavailable'),
+      );
+
+      // Act
+      const before = Date.now();
+      await useCase.execute();
+      const after = Date.now();
+
+      // Assert — delay = 30s * 2^2 = 120_000ms
+      const expectedDelay = BASE_RETRY_DELAY_MS * Math.pow(2, 2);
+      const nextRetryAt = (expirationOutboxRepository.update.mock.calls[0][1] as unknown as { nextRetryAt: Date }).nextRetryAt;
+      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(before + expectedDelay);
+      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(after + expectedDelay);
+    });
+
+    it('should cap delay at MAX_RETRY_DELAY_MS when retryCount is high', async (): Promise<void> => {
+      // Arrange — retryCount=8 → 30s * 2^8 = 7680s > MAX_RETRY_DELAY_MS (3600s)
+      const rowNearMax: ReservationExpirationOutboxEntity = {
+        ...mockOutboxRow,
+        retryCount: 8,
+      } as ReservationExpirationOutboxEntity;
+      expirationOutboxRepository.find.mockResolvedValue([rowNearMax]);
+      messagingProducer.publishReservationExpired.mockRejectedValueOnce(
+        new Error('broker unavailable'),
+      );
+
+      // Act
+      const before = Date.now();
+      await useCase.execute();
+      const after = Date.now();
+
+      // Assert
+      const nextRetryAt = (expirationOutboxRepository.update.mock.calls[0][1] as unknown as { nextRetryAt: Date }).nextRetryAt;
+      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(before + MAX_RETRY_DELAY_MS);
+      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(after + MAX_RETRY_DELAY_MS);
+    });
+
+    it('should continue processing remaining rows when one fails', async (): Promise<void> => {
+      // Arrange
+      const secondRow: ReservationExpirationOutboxEntity = {
+        ...mockOutboxRow,
+        id: 'outbox-2',
+      } as ReservationExpirationOutboxEntity;
+      expirationOutboxRepository.find.mockResolvedValue([mockOutboxRow, secondRow]);
+      messagingProducer.publishReservationExpired
+        .mockRejectedValueOnce(new Error('publish error'))
+        .mockResolvedValueOnce(undefined);
+
+      // Act
+      const result: number = await useCase.execute();
+
+      // Assert
+      expect(result).toBe(1);
+      expect(messagingProducer.publishReservationExpired).toHaveBeenCalledTimes(2);
+      expect(expirationOutboxRepository.update).toHaveBeenCalledWith(
+        { id: 'outbox-1' },
+        expect.objectContaining({ retryCount: 1, nextRetryAt: expect.any(Date) }),
+      );
+      expect(expirationOutboxRepository.update).toHaveBeenCalledWith(
+        { id: 'outbox-2' },
+        { published: true },
+      );
+    });
+
+    it('should query with array where clause for backoff and retry-count filtering', async (): Promise<void> => {
+      // Arrange
+      expirationOutboxRepository.find.mockResolvedValue([]);
+
+      // Act
+      await useCase.execute();
+
+      // Assert
+      expect(expirationOutboxRepository.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.arrayContaining([
+            expect.objectContaining({ published: false }),
+            expect.objectContaining({ published: false }),
+          ]),
+          order: { createdAt: 'ASC' },
+        }),
+      );
     });
   });
 });
