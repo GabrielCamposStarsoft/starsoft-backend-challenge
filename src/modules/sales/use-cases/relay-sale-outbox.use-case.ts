@@ -19,7 +19,7 @@ import {
   MAX_RETRY_COUNT,
   MAX_RETRY_DELAY_MS,
   OUTBOX_EVENT_PAYMENT_CONFIRMED,
-} from '../constants/sales-outbox.constants';
+} from '../constants';
 import { SaleOutboxEntity } from '../entities/sale-outbox.entity';
 
 /**

@@ -7,7 +7,7 @@ import { RelaySaleOutboxUseCase } from '../relay-sale-outbox.use-case';
 import {
   BASE_RETRY_DELAY_MS,
   MAX_RETRY_DELAY_MS,
-} from '../../constants/sales-outbox.constants';
+} from '../../constants';
 
 describe('RelaySaleOutboxUseCase', (): void => {
   let useCase: RelaySaleOutboxUseCase;
@@ -133,12 +133,23 @@ describe('RelaySaleOutboxUseCase', (): void => {
       expect(result).toBe(0);
       expect(outboxRepository.update).toHaveBeenCalledWith(
         { id: 'outbox-1' },
-        expect.objectContaining({ retryCount: 1, nextRetryAt: expect.any(Date) }),
+        expect.objectContaining({
+          retryCount: 1,
+          nextRetryAt: expect.any(Date),
+        }),
       );
-      const [, payload] = outboxRepository.update.mock.calls[0] as [unknown, { nextRetryAt: Date }][];
-      const nextRetryAt = (payload as unknown as { nextRetryAt: Date }).nextRetryAt;
-      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(before + BASE_RETRY_DELAY_MS);
-      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(after + BASE_RETRY_DELAY_MS);
+      const [, payload] = outboxRepository.update.mock.calls[0] as [
+        unknown,
+        { nextRetryAt: Date },
+      ][];
+      const nextRetryAt = (payload as unknown as { nextRetryAt: Date })
+        .nextRetryAt;
+      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(
+        before + BASE_RETRY_DELAY_MS,
+      );
+      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(
+        after + BASE_RETRY_DELAY_MS,
+      );
     });
 
     it('should double the delay on each subsequent retry', async (): Promise<void> => {
@@ -161,7 +172,9 @@ describe('RelaySaleOutboxUseCase', (): void => {
       const expectedDelay = BASE_RETRY_DELAY_MS * Math.pow(2, 2);
       const [, payload] = outboxRepository.update.mock.calls[0];
       const nextRetryAt = (payload as { nextRetryAt: Date }).nextRetryAt;
-      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(before + expectedDelay);
+      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(
+        before + expectedDelay,
+      );
       expect(nextRetryAt.getTime()).toBeLessThanOrEqual(after + expectedDelay);
     });
 
@@ -184,8 +197,12 @@ describe('RelaySaleOutboxUseCase', (): void => {
       // Assert
       const [, payload] = outboxRepository.update.mock.calls[0];
       const nextRetryAt = (payload as { nextRetryAt: Date }).nextRetryAt;
-      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(before + MAX_RETRY_DELAY_MS);
-      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(after + MAX_RETRY_DELAY_MS);
+      expect(nextRetryAt.getTime()).toBeGreaterThanOrEqual(
+        before + MAX_RETRY_DELAY_MS,
+      );
+      expect(nextRetryAt.getTime()).toBeLessThanOrEqual(
+        after + MAX_RETRY_DELAY_MS,
+      );
     });
 
     it('should continue processing remaining rows when one fails', async (): Promise<void> => {
@@ -194,7 +211,10 @@ describe('RelaySaleOutboxUseCase', (): void => {
         ...mockPaymentConfirmedRow,
         id: 'outbox-2',
       } as SaleOutboxEntity;
-      outboxRepository.find.mockResolvedValue([mockPaymentConfirmedRow, secondRow]);
+      outboxRepository.find.mockResolvedValue([
+        mockPaymentConfirmedRow,
+        secondRow,
+      ]);
       messagingProducer.publishPaymentConfirmed
         .mockRejectedValueOnce(new Error('publish error'))
         .mockResolvedValueOnce(undefined);
@@ -204,10 +224,15 @@ describe('RelaySaleOutboxUseCase', (): void => {
 
       // Assert
       expect(result).toBe(1);
-      expect(messagingProducer.publishPaymentConfirmed).toHaveBeenCalledTimes(2);
+      expect(messagingProducer.publishPaymentConfirmed).toHaveBeenCalledTimes(
+        2,
+      );
       expect(outboxRepository.update).toHaveBeenCalledWith(
         { id: 'outbox-1' },
-        expect.objectContaining({ retryCount: 1, nextRetryAt: expect.any(Date) }),
+        expect.objectContaining({
+          retryCount: 1,
+          nextRetryAt: expect.any(Date),
+        }),
       );
       expect(outboxRepository.update).toHaveBeenCalledWith(
         { id: 'outbox-2' },
