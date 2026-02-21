@@ -61,7 +61,7 @@ describe('Concurrency: 10 users, same seat', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
     await closeTestDataSource();
   });
 

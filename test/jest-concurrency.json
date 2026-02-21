@@ -11,5 +11,6 @@
     "^src/(.*)$": "<rootDir>/../src/$1"
   },
   "testTimeout": 120000,
-  "verbose": true
+  "verbose": true,
+  "maxWorkers": 1
 }
