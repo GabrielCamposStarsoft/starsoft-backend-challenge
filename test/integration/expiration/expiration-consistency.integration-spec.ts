@@ -18,7 +18,7 @@ import { ReservationStatus } from 'src/modules/reservations/enums';
 import { ExpireReservationsUseCase } from 'src/modules/reservations/use-cases';
 import { SeatEntity } from 'src/modules/seats/entities';
 import { SeatStatus } from 'src/modules/seats/enums';
-import { DataSource } from 'typeorm';
+import { DataSource, type EntityManager } from 'typeorm';
 import {
   createFullTestScenario,
   type TestSeat,
@@ -83,9 +83,9 @@ describe('Expiration Consistency', () => {
   });
 
   it('should expire pending reservation and release seat correctly', async () => {
-    const expiresAt = new Date(Date.now() - 1000);
+    const expiresAt: Date = new Date(Date.now() - 1000);
 
-    await ds.transaction(async (mgr) => {
+    await ds.transaction(async (mgr: EntityManager): Promise<void> => {
       await mgr
         .createQueryBuilder()
         .update(SeatEntity)
@@ -94,7 +94,7 @@ describe('Expiration Consistency', () => {
         .andWhere('session_id = :sessionId', { sessionId: session.id })
         .execute();
 
-      const res = mgr.create(ReservationEntity, {
+      const res: ReservationEntity = mgr.create(ReservationEntity, {
         sessionId: session.id,
         seatId: seat1.id,
         userId: user1.id,
@@ -118,10 +118,10 @@ describe('Expiration Consistency', () => {
     expect(seat.status).toBe('available');
   });
 
-  it('should not expire reservation that is not yet expired', async () => {
+  it('should not expire reservation that is not yet expired', async (): Promise<void> => {
     const expiresAt = new Date(Date.now() + 60_000);
 
-    await ds.transaction(async (mgr) => {
+    await ds.transaction(async (mgr: EntityManager): Promise<void> => {
       await mgr
         .createQueryBuilder()
         .update(SeatEntity)
@@ -130,7 +130,7 @@ describe('Expiration Consistency', () => {
         .andWhere('session_id = :sessionId', { sessionId: session.id })
         .execute();
 
-      const res = mgr.create(ReservationEntity, {
+      const res: ReservationEntity = mgr.create(ReservationEntity, {
         sessionId: session.id,
         seatId: seat1.id,
         userId: user1.id,

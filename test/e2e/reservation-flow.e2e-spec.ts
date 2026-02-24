@@ -41,7 +41,7 @@ describe('E2E Reservation Flow', (): void => {
   let ds: DataSource;
   let userToken: string;
   let session: TestSession;
-  let seats: TestSeat[];
+  let seats: Array<TestSeat>;
   let user: TestUser;
 
   beforeAll(async (): Promise<void> => {

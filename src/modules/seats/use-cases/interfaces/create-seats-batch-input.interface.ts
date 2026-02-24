@@ -1,4 +1,4 @@
 export interface ICreateSeatsBatchInput {
   sessionId: string;
-  labels: string[];
+  labels: Array<string>;
 }

@@ -32,8 +32,8 @@ describe('Concurrency: 100 users, 16 seats', () => {
   let app: INestApplication<FastifyInstance>;
   let ds: DataSource;
   let session: TestSession;
-  let seats: TestSeat[];
-  let tokens: string[];
+  let seats: Array<TestSeat>;
+  let tokens: Array<string>;
 
   beforeAll(async () => {
     ds = await getTestDataSource();
@@ -61,7 +61,7 @@ describe('Concurrency: 100 users, 16 seats', () => {
   });
 
   afterAll(async () => {
-    if (app) await app.close();
+    if (app !== undefined) await app.close();
     await closeTestDataSource();
   });
 

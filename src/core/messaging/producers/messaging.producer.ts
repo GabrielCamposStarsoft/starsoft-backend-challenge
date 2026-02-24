@@ -8,7 +8,12 @@
  * @producer messaging-producer
  */
 
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import amqpConnectionManager, {
   type AmqpConnectionManager,
@@ -95,9 +100,7 @@ export class MessagingProducer implements OnModuleInit, OnModuleDestroy {
 
     this.connection = amqpConnectionManager.connect([url]);
 
-    this.connection.on('connect', () =>
-      this.logger.log('RabbitMQ connected'),
-    );
+    this.connection.on('connect', () => this.logger.log('RabbitMQ connected'));
     this.connection.on('disconnect', ({ err }: { err: Error }) =>
       this.logger.warn(`RabbitMQ disconnected — reconnecting: ${err.message}`),
     );
@@ -131,7 +134,10 @@ export class MessagingProducer implements OnModuleInit, OnModuleDestroy {
    * @private
    * @async
    */
-  private async publish<T extends object>(routingKey: string, payload: T): Promise<void> {
+  private async publish<T extends object>(
+    routingKey: string,
+    payload: T,
+  ): Promise<void> {
     /**
      * Message body as serialized Buffer.
      * @type {Buffer}
@@ -156,7 +162,8 @@ export class MessagingProducer implements OnModuleInit, OnModuleDestroy {
     let timeoutId!: NodeJS.Timeout;
     const timeoutPromise: Promise<void> = new Promise((_, reject) => {
       timeoutId = setTimeout(
-        () => reject(new Error(`Publish timed out after ${PUBLISH_TIMEOUT_MS}ms`)),
+        () =>
+          reject(new Error(`Publish timed out after ${PUBLISH_TIMEOUT_MS}ms`)),
         PUBLISH_TIMEOUT_MS,
       );
     });
@@ -242,10 +249,10 @@ export class MessagingProducer implements OnModuleInit, OnModuleDestroy {
    * @returns {Promise<void>} Resolves when connections and channels are closed.
    */
   public async onModuleDestroy(): Promise<void> {
-    if (this.channel) {
+    if (this.channel !== undefined) {
       await this.channel.close();
     }
-    if (this.connection) {
+    if (this.connection !== undefined) {
       await this.connection.close();
     }
   }

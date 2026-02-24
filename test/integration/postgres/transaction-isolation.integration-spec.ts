@@ -14,7 +14,12 @@ import { ReservationEntity } from 'src/modules/reservations/entities';
 import { ReservationStatus } from 'src/modules/reservations/enums';
 import { SeatEntity } from 'src/modules/seats/entities';
 import { SeatStatus } from 'src/modules/seats/enums';
-import type { DataSource } from 'typeorm';
+import type {
+  DataSource,
+  EntityManager,
+  QueryRunner,
+  UpdateResult,
+} from 'typeorm';
 import {
   createFullTestScenario,
   type TestSeat,
@@ -43,7 +48,7 @@ describe('PostgreSQL Transaction Isolation', () => {
     await closeTestDataSource();
   });
 
-  beforeEach(async () => {
+  beforeEach(async (): Promise<void> => {
     const scenario = await createFullTestScenario(ds, { seatCount: 4 });
     session = scenario.session;
     seat1 = scenario.seats[0];
@@ -51,7 +56,7 @@ describe('PostgreSQL Transaction Isolation', () => {
     user2 = scenario.users[1];
   });
 
-  afterEach(async () => {
+  afterEach(async (): Promise<void> => {
     await ds.query('DELETE FROM sales_outbox');
     await ds.query('DELETE FROM sales');
     await ds.query('DELETE FROM reservation_events_outbox');
@@ -64,9 +69,9 @@ describe('PostgreSQL Transaction Isolation', () => {
   });
 
   it('should allow only one of two concurrent reservations on the same seat', async () => {
-    const expiresAt = new Date(Date.now() + 60_000);
-    const conn1 = ds.createQueryRunner();
-    const conn2 = ds.createQueryRunner();
+    const expiresAt: Date = new Date(Date.now() + 60_000);
+    const conn1: QueryRunner = ds.createQueryRunner();
+    const conn2: QueryRunner = ds.createQueryRunner();
 
     await conn1.connect();
     await conn2.connect();
@@ -81,7 +86,7 @@ describe('PostgreSQL Transaction Isolation', () => {
     const runT1 = async (): Promise<void> => {
       await conn1.startTransaction();
       try {
-        const r = await conn1.manager
+        const r: UpdateResult = await conn1.manager
           .createQueryBuilder()
           .update(SeatEntity)
           .set({ status: SeatStatus.RESERVED, version: () => 'version + 1' })
@@ -93,7 +98,7 @@ describe('PostgreSQL Transaction Isolation', () => {
           await conn1.rollbackTransaction();
           return;
         }
-        const res = conn1.manager.create(ReservationEntity, {
+        const res: ReservationEntity = conn1.manager.create(ReservationEntity, {
           sessionId: session.id,
           seatId: seat1.id,
           userId: user1.id,
@@ -113,7 +118,7 @@ describe('PostgreSQL Transaction Isolation', () => {
     const runT2 = async (): Promise<void> => {
       await conn2.startTransaction();
       try {
-        const r = await conn2.manager
+        const r: UpdateResult = await conn2.manager
           .createQueryBuilder()
           .update(SeatEntity)
           .set({ status: SeatStatus.RESERVED, version: () => 'version + 1' })
@@ -125,7 +130,7 @@ describe('PostgreSQL Transaction Isolation', () => {
           await conn2.rollbackTransaction();
           return;
         }
-        const res = conn2.manager.create(ReservationEntity, {
+        const res: ReservationEntity = conn2.manager.create(ReservationEntity, {
           sessionId: session.id,
           seatId: seat1.id,
           userId: user2.id,
@@ -166,30 +171,32 @@ describe('PostgreSQL Transaction Isolation', () => {
   });
 
   it('should have no phantom reads - seat state is consistent after concurrent attempts', async () => {
-    const expiresAt = new Date(Date.now() + 60_000);
-    const results: boolean[] = [];
+    const expiresAt: Date = new Date(Date.now() + 60_000);
+    const results: Array<boolean> = [];
 
     for (let i = 0; i < 5; i++) {
-      const r = await ds.transaction(async (mgr) => {
-        const updateResult = await mgr
-          .createQueryBuilder()
-          .update(SeatEntity)
-          .set({ status: SeatStatus.RESERVED, version: () => 'version + 1' })
-          .where('id = :seatId', { seatId: seat1.id })
-          .andWhere('session_id = :sessionId', { sessionId: session.id })
-          .andWhere('status = :status', { status: SeatStatus.AVAILABLE })
-          .execute();
-        if (updateResult.affected === 0) return false;
-        const res = mgr.create(ReservationEntity, {
-          sessionId: session.id,
-          seatId: seat1.id,
-          userId: user1.id,
-          status: ReservationStatus.PENDING,
-          expiresAt,
-        });
-        await mgr.save(res);
-        return true;
-      });
+      const r: boolean = await ds.transaction(
+        async (mgr: EntityManager): Promise<boolean> => {
+          const updateResult: UpdateResult = await mgr
+            .createQueryBuilder()
+            .update(SeatEntity)
+            .set({ status: SeatStatus.RESERVED, version: () => 'version + 1' })
+            .where('id = :seatId', { seatId: seat1.id })
+            .andWhere('session_id = :sessionId', { sessionId: session.id })
+            .andWhere('status = :status', { status: SeatStatus.AVAILABLE })
+            .execute();
+          if (updateResult.affected === 0) return false;
+          const res = mgr.create(ReservationEntity, {
+            sessionId: session.id,
+            seatId: seat1.id,
+            userId: user1.id,
+            status: ReservationStatus.PENDING,
+            expiresAt,
+          });
+          await mgr.save(res);
+          return true;
+        },
+      );
       results.push(r);
     }
 

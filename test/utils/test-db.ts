@@ -60,7 +60,7 @@ export async function revertTestMigrations(): Promise<void> {
  */
 export async function closeTestDataSource(): Promise<void> {
   if (testDataSource?.isInitialized ?? false) {
-    await (testDataSource as Nullable<DataSource>)?.destroy();
+    await testDataSource?.destroy();
     testDataSource = null;
   }
 }

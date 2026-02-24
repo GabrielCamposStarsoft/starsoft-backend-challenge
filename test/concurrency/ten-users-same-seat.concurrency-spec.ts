@@ -8,7 +8,7 @@
  * Run: pnpm test:concurrency
  */
 import type { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
 import { AppModule } from 'src/app.module';
 import type { FastifyInstance } from 'fastify';
@@ -33,13 +33,13 @@ describe('Concurrency: 10 users, same seat', () => {
   let ds: DataSource;
   let session: TestSession;
   let seat: TestSeat;
-  let tokens: string[];
+  let tokens: Array<string>;
 
   beforeAll(async () => {
     ds = await getTestDataSource();
     await runTestMigrations();
 
-    const module = await Test.createTestingModule({
+    const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
@@ -61,15 +61,15 @@ describe('Concurrency: 10 users, same seat', () => {
   });
 
   afterAll(async () => {
-    if (app) await app.close();
+    if (app !== undefined) await app.close();
     await closeTestDataSource();
   });
 
   it('should have at most 1 success, no duplicate reservations for 10 concurrent on same seat', async () => {
-    const baseKey = `concurrency-10-${Date.now()}`;
+    const baseKey: string = `concurrency-10-${Date.now()}`;
 
     const results = await Promise.all(
-      tokens.map((token, i) =>
+      tokens.map((token: string, i: number) =>
         (app.getHttpAdapter().getInstance() as FastifyInstance).inject({
           method: 'POST',
           url: '/reservations',

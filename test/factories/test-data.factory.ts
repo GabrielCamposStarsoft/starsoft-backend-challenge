@@ -5,6 +5,7 @@
  * Produces deterministic, reproducible test entities.
  */
 import * as argon2 from 'argon2';
+import type { Optional } from 'src/common';
 import { UserRole } from 'src/common';
 import type { DataSource } from 'typeorm';
 
@@ -38,18 +39,20 @@ export interface TestSeat {
  */
 export async function createTestSession(
   ds: DataSource,
-  overrides?: Partial<{
-    movieTitle: string;
-    roomName: string;
-    ticketPrice: number;
-  }>,
+  overrides?: Optional<
+    Partial<{
+      movieTitle: string;
+      roomName: string;
+      ticketPrice: number;
+    }>
+  >,
 ): Promise<TestSession> {
   const now: Date = new Date();
   const startTime: Date = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   const endTime: Date = new Date(startTime.getTime() + 2 * 60 * 60 * 1000);
 
   /** Unique room per call to avoid sessions_no_overlap constraint when tests run in parallel or share DB. */
-  const defaultRoom = `Room-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const defaultRoom: string = `Room-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   const [result] = await ds.query(
     `INSERT INTO sessions (movie_title, room_name, start_time, end_time, ticket_price, status)
@@ -71,7 +74,9 @@ export async function createTestSession(
  */
 export async function createTestUser(
   ds: DataSource,
-  overrides?: Partial<{ email: string; username: string; role: UserRole }>,
+  overrides?: Optional<
+    Partial<{ email: string; username: string; role: UserRole }>
+  >,
 ): Promise<TestUser> {
   const email: string =
     overrides?.email ??
@@ -97,7 +102,7 @@ export async function createTestUser(
  */
 export async function createTestAdmin(
   ds: DataSource,
-  overrides?: Partial<{ email: string; username: string }>,
+  overrides?: Optional<Partial<{ email: string; username: string }>>,
 ): Promise<TestUser> {
   return await createTestUser(ds, {
     ...overrides,
@@ -114,7 +119,7 @@ export async function createTestSeats(
   count: number = 16,
 ): Promise<Array<TestSeat>> {
   const seats: Array<TestSeat> = [];
-  for (let i = 1; i <= count; i++) {
+  for (let i: number = 1; i <= count; i++) {
     const [row] = await ds.query(
       `INSERT INTO seats (session_id, label, status)
        VALUES ($1, $2, 'available')
@@ -132,9 +137,9 @@ export async function createTestSeats(
 export async function createFullTestScenario(
   ds: DataSource,
   options?: {
-    seatCount?: number;
-    userCount?: number;
-    adminCount?: number;
+    seatCount?: Optional<number>;
+    userCount?: Optional<number>;
+    adminCount?: Optional<number>;
   },
 ): Promise<{
   session: TestSession;
@@ -156,8 +161,8 @@ export async function createFullTestScenario(
   });
 
   const userCount = options?.userCount ?? 5;
-  const users: TestUser[] = [];
-  for (let i = 0; i < userCount; i++) {
+  const users: Array<TestUser> = [];
+  for (let i: number = 0; i < userCount; i++) {
     users.push(
       await createTestUser(ds, {
         email: `user${i}-${uniqueId}@test.com`,

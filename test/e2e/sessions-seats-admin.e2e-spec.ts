@@ -42,7 +42,7 @@ describe('E2E Sessions & Seats Admin', () => {
   let adminToken: string;
   let userToken: string;
   let session: TestSession;
-  let seats: TestSeat[];
+  let seats: Array<TestSeat>;
   let admin: TestUser;
   let user: TestUser;
 

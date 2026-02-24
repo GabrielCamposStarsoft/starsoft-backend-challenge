@@ -19,5 +19,5 @@ export class CreateSeatsBatchDto {
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   @ArrayMinSize(1)
-  labels: string[];
+  labels: Array<string>;
 }
