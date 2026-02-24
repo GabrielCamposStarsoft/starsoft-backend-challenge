@@ -34,7 +34,7 @@ A solucao combina:
 | **Fastify** | Servidor HTTP | Performance superior ao Express, adequado para APIs de alta concorrencia |
 | **Scalar** | Documentacao API | Interface OpenAPI moderna, interativa e visualmente superior ao Swagger UI |
 | **ioredis** | Cliente Redis | Conectividade robusta, usado por Keyv e Redlock |
-| **amqplib / amqp-connection-manager** | Cliente RabbitMQ | Publicacao e consumo de mensagens, setup de DLQ |
+| **amqplib / amqp-connection-manager** | Cliente RabbitMQ | Producer com Publisher Confirms e reconexao automatica (amqp-connection-manager); consumer via NestJS microservices; setup de DLQ |
 | **argon2** | Hash de senha | Padrao recomendado para armazenamento seguro de credenciais |
 | **@nestjs/jwt** | Autenticacao | Tokens JWT (access + refresh) com expiracao configuravel |
 | **@nestjs/throttler** | Rate limiting | Protecao contra brute force (login, registro, refresh) |
@@ -534,6 +534,20 @@ UseCase → Outbox Table (na mesma transacao)
     → MessagingConsumer → dedup check → invalidate cache → ack
   → Scheduler de cleanup (a cada hora) → DELETE WHERE published/processed=true AND created_at < now()-7d
 ```
+
+### Publisher Confirms e reconexao automatica
+
+O `MessagingProducer` usa `amqp-connection-manager` com `ConfirmChannel`. O metodo `publish()` so resolve quando o broker confirma (ack) o recebimento da mensagem — o outbox relay marca `published = true` apenas apos essa confirmacao. Se o broker estiver temporariamente indisponivel, mensagens ficam bufferizadas internamente e sao entregues assim que a conexao e restabelecida, sem intervencao manual.
+
+```
+relay chama publish()
+  → amqp-connection-manager envia ao broker
+  → broker envia ack (Publisher Confirm)
+  → publish() resolve
+  → outbox.published = true
+```
+
+Se a aplicacao cair entre o ack do broker e o `UPDATE published = true`, o relay re-processa na proxima rodada e o consumer deduplica via cache Redis (TTL 24h).
 
 ### Deduplicacao no consumer
 
@@ -1107,7 +1121,7 @@ curl -X POST http://localhost:8088/sales \
 
 ## Limitacoes Conhecidas
 
-1. **Relay do Outbox**: Publish e update nao sao atomicos; crash entre eles pode gerar duplicacao (mitigado por dedup no consumer)
+1. **Relay do Outbox**: Publish e `UPDATE published = true` nao sao atomicos; se a aplicacao cair apos o broker confirmar mas antes do update, o relay re-executa o publish na proxima rodada — duplicata mitigada pelo dedup do consumer (TTL 24h no Redis)
 3. **Redlock com um node**: Falha do Redis pode liberar locks e permitir execucao duplicada de schedulers
 4. **Connection pool**: Sem tuning explicito; o default do TypeORM pode ser insuficiente sob carga extrema
 5. **Indices na outbox**: Queries de relay podem fazer full scan em volumes altos
@@ -1126,7 +1140,7 @@ curl -X POST http://localhost:8088/sales \
 - Connection pool tuning (`poolSize`, `connectionTimeout`) conforme carga esperada
 - Teste de edge case: pagamento no limite da expiracao (ex: TTL 2s, pagamento em 1.9s)
 - Observabilidade: metricas Prometheus, tracing distribuido (OpenTelemetry)
-- Circuit breaker no relay de outbox para lidar com indisponibilidade do RabbitMQ
+- Circuit breaker no relay de outbox para indisponibilidade prolongada do RabbitMQ (amqp-connection-manager ja bufferiza durante quedas curtas, mas nao limita acumulo em quedas longas)
 
 ---
 

@@ -11,25 +11,25 @@
  * REQUIRES: docker compose -f docker/compose.test.yml up -d
  * Run: pnpm test:integration
  */
+import { Test } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { ReservationEntity } from 'src/modules/reservations/entities';
+import { ReservationStatus } from 'src/modules/reservations/enums';
+import { ExpireReservationsUseCase } from 'src/modules/reservations/use-cases';
+import { SeatEntity } from 'src/modules/seats/entities';
+import { SeatStatus } from 'src/modules/seats/enums';
 import { DataSource } from 'typeorm';
 import {
-  getTestDataSource,
-  runTestMigrations,
-  closeTestDataSource,
-} from '../../utils/test-db';
-import {
   createFullTestScenario,
-  type TestSession,
   type TestSeat,
+  type TestSession,
   type TestUser,
 } from '../../factories/test-data.factory';
-import { SeatStatus } from 'src/modules/seats/enums';
-import { ReservationStatus } from 'src/modules/reservations/enums';
-import { SeatEntity } from 'src/modules/seats/entities';
-import { ReservationEntity } from 'src/modules/reservations/entities';
-import { ExpireReservationsUseCase } from 'src/modules/reservations/use-cases';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Test } from '@nestjs/testing';
+import {
+  closeTestDataSource,
+  getTestDataSource,
+  runTestMigrations,
+} from '../../utils/test-db';
 
 describe('Expiration Consistency', () => {
   let ds: DataSource;

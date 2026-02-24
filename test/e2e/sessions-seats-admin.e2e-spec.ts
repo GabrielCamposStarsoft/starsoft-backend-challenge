@@ -12,23 +12,23 @@
  * Run: pnpm test:e2e
  */
 import type { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
-import { AppModule } from 'src/app.module';
+import { Test } from '@nestjs/testing';
 import type { FastifyInstance } from 'fastify';
-import {
-  runTestMigrations,
-  getTestDataSource,
-  closeTestDataSource,
-} from '../utils/test-db';
+import { AppModule } from 'src/app.module';
+import { SeatStatus } from 'src/modules/seats/enums';
+import type { DataSource } from 'typeorm';
 import {
   createFullTestScenario,
-  type TestSession,
   type TestSeat,
+  type TestSession,
   type TestUser,
 } from '../factories/test-data.factory';
-import type { DataSource } from 'typeorm';
-import { SeatStatus } from 'src/modules/seats/enums';
+import {
+  closeTestDataSource,
+  getTestDataSource,
+  runTestMigrations,
+} from '../utils/test-db';
 
 interface LoginResponse {
   accessToken: string;

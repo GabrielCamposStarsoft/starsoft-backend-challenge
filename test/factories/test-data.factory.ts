@@ -4,9 +4,9 @@
  * Test data factories for integration, e2e, and concurrency tests.
  * Produces deterministic, reproducible test entities.
  */
-import type { DataSource } from 'typeorm';
 import * as argon2 from 'argon2';
 import { UserRole } from 'src/common';
+import type { DataSource } from 'typeorm';
 
 const PASSWORD_HASH: string = 'Password1!';
 

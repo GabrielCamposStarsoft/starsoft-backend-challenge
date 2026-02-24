@@ -16,12 +16,12 @@ import {
   runTestMigrations,
   getTestDataSource,
   closeTestDataSource,
-} from '../utils/test-db';
+} from '../utils';
 import {
   createFullTestScenario,
   type TestSession,
   type TestSeat,
-} from '../factories/test-data.factory';
+} from '../factories';
 import type { DataSource } from 'typeorm';
 
 interface LoginResponse {

@@ -54,7 +54,7 @@ RUN pnpm run build
 ########################################################
 
 # Prepare a minimal image for running the built application
-FROM node:22.12.0-alpine AS runner
+FROM node:24.13.1-alpine3.22 AS runner
 
 # Set application working directory
 WORKDIR /app

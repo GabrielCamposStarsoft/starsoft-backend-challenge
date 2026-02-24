@@ -9,23 +9,23 @@
  * REQUIRES: docker compose -f docker/compose.test.yml up -d
  * Run: pnpm test:integration
  */
-import type { DataSource } from 'typeorm';
-import {
-  getTestDataSource,
-  runTestMigrations,
-  closeTestDataSource,
-} from '../../utils/test-db';
-import {
-  createFullTestScenario,
-  type TestSession,
-  type TestSeat,
-  type TestUser,
-} from '../../factories/test-data.factory';
-import { SeatStatus } from 'src/modules/seats/enums';
+import type { Nullable } from 'src/common';
+import { ReservationEntity } from 'src/modules/reservations/entities';
 import { ReservationStatus } from 'src/modules/reservations/enums';
 import { SeatEntity } from 'src/modules/seats/entities';
-import { ReservationEntity } from 'src/modules/reservations/entities';
-import type { Nullable } from 'src/common';
+import { SeatStatus } from 'src/modules/seats/enums';
+import type { DataSource } from 'typeorm';
+import {
+  createFullTestScenario,
+  type TestSeat,
+  type TestSession,
+  type TestUser,
+} from '../../factories/test-data.factory';
+import {
+  closeTestDataSource,
+  getTestDataSource,
+  runTestMigrations,
+} from '../../utils/test-db';
 
 describe('PostgreSQL Deadlock Handling', (): void => {
   let ds: DataSource;

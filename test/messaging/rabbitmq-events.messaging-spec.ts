@@ -11,28 +11,28 @@
  * Run: pnpm test:messaging
  */
 import type { INestApplication } from '@nestjs/common';
-import amqp from 'amqplib';
-import { Test } from '@nestjs/testing';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
-import { AppModule } from 'src/app.module';
+import { Test } from '@nestjs/testing';
+import amqp from 'amqplib';
 import type { FastifyInstance } from 'fastify';
-import {
-  runTestMigrations,
-  getTestDataSource,
-  closeTestDataSource,
-} from '../utils/test-db';
+import { AppModule } from 'src/app.module';
+import { RMQ_QUEUE } from 'src/common';
+import { ReservationOutboxEntity } from 'src/modules/reservations/entities';
+import { RelayReservationCreatedOutboxUseCase } from 'src/modules/reservations/use-cases';
+import { SeatEntity } from 'src/modules/seats/entities';
+import { SeatStatus } from 'src/modules/seats/enums';
+import type { DataSource } from 'typeorm';
 import {
   createFullTestScenario,
-  type TestSession,
   type TestSeat,
+  type TestSession,
   type TestUser,
 } from '../factories/test-data.factory';
-import type { DataSource } from 'typeorm';
-import { SeatEntity } from 'src/modules/seats/entities';
-import { RelayReservationCreatedOutboxUseCase } from 'src/modules/reservations/use-cases';
-import { ReservationOutboxEntity } from 'src/modules/reservations/entities';
-import { RMQ_QUEUE } from 'src/common';
-import { SeatStatus } from 'src/modules/seats/enums';
+import {
+  closeTestDataSource,
+  getTestDataSource,
+  runTestMigrations,
+} from '../utils/test-db';
 
 const TEST_ENV = {
   RMQ_URL: process.env.TEST_RMQ_URL ?? 'amqp://guest:guest@localhost:5673',

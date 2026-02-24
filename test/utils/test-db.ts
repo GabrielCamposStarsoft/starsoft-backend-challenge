@@ -4,10 +4,10 @@
  * Must run migrations before integration/e2e tests.
  * Setup files apply test env before tests run.
  */
-import { DataSource } from 'typeorm';
 import { join } from 'path';
-import { TEST_ENV } from './test-env';
 import type { Nullable } from 'src/common';
+import { DataSource } from 'typeorm';
+import { TEST_ENV } from './test-env';
 
 export const testDataSourceOptions = {
   type: 'postgres' as const,
@@ -25,7 +25,7 @@ export const testDataSourceOptions = {
   ],
 };
 
-let testDataSource: DataSource | null = null;
+let testDataSource: Nullable<DataSource> = null;
 
 /**
  * Get or create the test DataSource.

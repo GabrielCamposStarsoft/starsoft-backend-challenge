@@ -117,7 +117,7 @@ export class ReservationOutboxEntity {
   /**
    * Earliest timestamp at which the next relay attempt may occur.
    * Null means the event is eligible for immediate processing.
-   * @type {Date | null}
+   * @type {Nullable<Date>}
    */
   @Column({
     name: 'next_retry_at',
